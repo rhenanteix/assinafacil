@@ -12,10 +12,11 @@ export function emitPostHogLog(
   attributes: LogAttributes,
 ) {
   if (!logger || !loggerProvider) return;
+  const provider = loggerProvider;
 
   logger.emit({ body, severityNumber, attributes });
   after(async () => {
-    await loggerProvider.forceFlush().catch(() => undefined);
+    await provider.forceFlush().catch(() => undefined);
   });
 }
 
