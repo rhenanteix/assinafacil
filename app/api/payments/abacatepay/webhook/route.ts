@@ -4,6 +4,7 @@ import { chargeSchema, getCharge } from "@/lib/abacatepay/client";
 import { paymentDevMode } from "@/lib/abacatepay/config";
 import { applyCharge } from "@/lib/payments/orders";
 import { db } from "@/lib/prisma";
+import { captureServerEvent } from "@/lib/posthog-server";
 import { failure } from "@/lib/utils/http";
 
 export const runtime = "nodejs";
@@ -31,7 +32,14 @@ export async function POST(request: Request) {
     // Re-read current state so delayed completion notifications cannot undo a refund/dispute.
     const current = await getCharge(charge.id);
     if (current.id !== charge.id) throw new Error("Payment ID mismatch");
-    await applyCharge(order.id, current, eventId);
+    const updated = await applyCharge(order.id, current, eventId);
+    if (event.data.event === "transparent.completed" && updated.status === "approved") {
+      await captureServerEvent({
+        distinctId: updated.userId,
+        event: "payment_completed",
+        properties: { plan: updated.plan, payment_method: updated.method, amount_cents: updated.cents, dev_mode: updated.devMode },
+      });
+    }
     return Response.json({ ok: true });
   } catch {
     console.error("abacatepay.webhook", { eventId });

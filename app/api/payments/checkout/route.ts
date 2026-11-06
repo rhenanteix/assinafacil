@@ -5,6 +5,8 @@ import { plans } from "@/lib/payments/plans";
 import { checkoutInput } from "@/lib/payments/validation";
 import { applyCharge, orderView } from "@/lib/payments/orders";
 import { db } from "@/lib/prisma";
+import { emitPostHogLog, SeverityNumber } from "@/lib/posthog-logs";
+import { captureServerEvent } from "@/lib/posthog-server";
 import { lockUser, signatureAccess } from "@/lib/prisma/signatures";
 import { failure, sameOrigin } from "@/lib/utils/http";
 
@@ -58,8 +60,22 @@ export async function POST(request: Request) {
     if (charge.metadata?.orderId && charge.metadata.orderId !== order.id) throw new Error("Invalid reference");
     // The create response belongs to this reserved order, even if metadata is omitted.
     const updated = await applyCharge(order.id, { ...charge, metadata: { orderId: order.id } });
+    emitPostHogLog("checkout_provider_charge_created", SeverityNumber.INFO, {
+      plan,
+      payment_method: method,
+      dev_mode: devMode,
+    });
+    await captureServerEvent({
+      distinctId: account.id,
+      event: "checkout_started",
+      properties: { plan, payment_method: method, amount_cents: order.cents, dev_mode: devMode },
+    });
     return Response.json({ order: orderView(updated) }, { headers: { "Cache-Control": "no-store" } });
   } catch (error) {
+    emitPostHogLog("checkout_provider_charge_failed", SeverityNumber.ERROR, {
+      payment_method: method,
+      failure_type: error instanceof PaymentApiError ? "provider_rejection" : "provider_or_network",
+    });
     const rejected = error instanceof PaymentApiError && error.definiteRejection;
     await db.order.updateMany({ where: { id: order.id, status: "creating", paymentId: null }, data: { status: rejected ? "failed" : "uncertain" } });
     // Preserve the order for status checks; a webhook can recover an ambiguous response.
