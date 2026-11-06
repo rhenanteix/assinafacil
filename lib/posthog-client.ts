@@ -12,20 +12,18 @@ export function initPostHog() {
     process.env.NEXT_PUBLIC_POSTHOG_KEY;
   const posthogHost = process.env.NEXT_PUBLIC_POSTHOG_HOST;
 
-  if (!posthogKey || !posthogHost) {
+  if (!posthogKey) {
     if (process.env.NODE_ENV === "development") {
-      const missingVariable = !posthogKey
-        ? "NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN"
-        : "NEXT_PUBLIC_POSTHOG_HOST";
       console.error(
-        `${missingVariable} variable required by PostHog is missing or un-configured, this causes events to be silently missed.`,
+        "NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN variable required by PostHog is missing or un-configured, this causes events to be silently missed.",
       );
     }
     return;
   }
 
   posthog.init(posthogKey, {
-    api_host: posthogHost,
+    api_host: "/ingest",
+    ui_host: posthogHost ?? "https://us.posthog.com",
     defaults: "2026-08-30",
     capture_pageview: "history_change",
     capture_pageleave: true,
