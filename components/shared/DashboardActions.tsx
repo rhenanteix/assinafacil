@@ -21,8 +21,9 @@ export function PostHogIdentity({ userId, email, name }: PostHogIdentityProps) {
 
   useEffect(() => {
     if (!process.env.NEXT_PUBLIC_POSTHOG_KEY || !process.env.NEXT_PUBLIC_POSTHOG_HOST) return;
+    if (identifiedUserId.current === userId) return;
 
-    if (identifiedUserId.current && identifiedUserId.current !== userId) {
+    if (identifiedUserId.current) {
       posthog.reset();
     }
 

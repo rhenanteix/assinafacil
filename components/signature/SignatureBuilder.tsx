@@ -15,6 +15,7 @@ import { TemplateSelector } from "./TemplateSelector";
 import { emptySignature, signatureSchema, canUseTemplate, type SignatureData } from "@/types/signature";
 import { jsonRequest, useSignatureActions } from "@/hooks/use-signature-actions";
 import { clearDraft, storeAuthDraft, useSignatureDraft } from "@/hooks/use-signature-draft";
+import posthog from "posthog-js";
 
 export function SignatureBuilder({ initial = emptySignature, pro = false, signedIn = false, needsVerification = false, owned = [], id }: {
   initial?: SignatureData; pro?: boolean; signedIn?: boolean; needsVerification?: boolean; owned?: string[]; id?: string;
@@ -29,6 +30,10 @@ export function SignatureBuilder({ initial = emptySignature, pro = false, signed
   const lockedTemplate = !canUseTemplate(data.template, pro, owned);
   const premium = !lockedTemplate && (pro || owned.includes(data.template));
   const { busy, run } = useSignatureActions();
+  const captureExportCompletion = (event: "signature_html_copied" | "signature_png_downloaded") => {
+    if (!process.env.NEXT_PUBLIC_POSTHOG_KEY || !process.env.NEXT_PUBLIC_POSTHOG_HOST) return;
+    posthog.capture(event);
+  };
   function signIn(value: SignatureData) {
     if (!storeAuthDraft(value)) {
       toast.error(t("Seu navegador bloqueou o armazenamento do rascunho. Habilite-o antes de entrar para manter os dados."));
@@ -63,6 +68,7 @@ export function SignatureBuilder({ initial = emptySignature, pro = false, signed
     const anchor = document.createElement("a");
     anchor.href = url; anchor.download = "assinatura.png"; anchor.click();
     setTimeout(() => URL.revokeObjectURL(url), 1500);
+    captureExportCompletion("signature_png_downloaded");
     toast.success(t("PNG baixado."));
   }
   return <form noValidate onSubmit={event => event.preventDefault()} className="grid items-start gap-6 lg:grid-cols-2">
@@ -96,8 +102,9 @@ export function SignatureBuilder({ initial = emptySignature, pro = false, signed
           if (typeof ClipboardItem !== "undefined" && navigator.clipboard?.write) {
             const item = new ClipboardItem({ "text/html": html.then(content => new Blob([content], { type: "text/html" })), "text/plain": html.then(content => new Blob([content], { type: "text/plain" })) });
             try { await navigator.clipboard.write([item]); }
-            catch { await navigator.clipboard.writeText(await html); toast.success(t("Código HTML copiado.")); return; }
+            catch { await navigator.clipboard.writeText(await html); captureExportCompletion("signature_html_copied"); toast.success(t("Código HTML copiado.")); return; }
           } else { await navigator.clipboard.writeText(await html); }
+          captureExportCompletion("signature_html_copied");
           toast.success(t("HTML copiado."));
         })}><Clipboard size={16} />{busy === "copy" ? t("Copiando…") : t("Copiar HTML")}</Button>
         <Button type="button" variant="outline" disabled={!!busy || lockedTemplate} onClick={submit("png", async value => {
