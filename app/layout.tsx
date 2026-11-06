@@ -7,6 +7,9 @@ import type { Metadata } from "next";
 import { GeistSans } from "geist/font/sans";
 import { MailyToaster } from "@/components/shared/MailyToaster";
 import { Header } from "@/components/layout/Header";
+import { PostHogIdentity } from "@/components/shared/DashboardActions";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
 import "@/styles/globals.css";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -25,7 +28,9 @@ export async function generateMetadata(): Promise<Metadata> {
 export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   const t = await getTranslator();
   const locale = await getLocale();
+  const session = await getServerSession(authOptions);
   return <html lang={locale} suppressHydrationWarning><body className={GeistSans.className} suppressHydrationWarning><LocaleProvider locale={locale}>
+    {session?.user?.id && <PostHogIdentity userId={session.user.id} email={session.user.email} name={session.user.name} />}
     <a href="#conteudo" className="sr-only focus:not-sr-only">{t("Ir para o conteúdo")}</a>
     <Header />
     <main id="conteudo">{children}</main>

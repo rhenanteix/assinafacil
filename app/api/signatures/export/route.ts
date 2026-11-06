@@ -2,6 +2,7 @@ import { getLocale } from "@/lib/i18n/server";
 import { z } from "zod";
 import { verifiedUserId } from "@/lib/auth";
 import { db } from "@/lib/prisma";
+import { captureServerEvent } from "@/lib/posthog-server";
 import { lockUser, signatureAccess } from "@/lib/prisma/signatures";
 import { prepareSignature } from "@/lib/signature/access";
 import { freeSignaturePng } from "@/lib/signature/free-png";
@@ -30,12 +31,17 @@ export async function POST(request: Request) {
     if (!signature.premium) {
       await db.user.updateMany({ where: { id: userId, firstFreeExportAt: null }, data: { firstFreeExportAt: new Date() } });
     }
+    await captureServerEvent({
+      distinctId: userId,
+      event: "signature_exported",
+      properties: { format, premium: signature.premium },
+    });
     return Response.json({ html: renderSignature(signature.data, signature.premium, await getLocale(), new URL(request.url).origin) }, { headers: privateHeaders });
   }
   if (signature.premium) return failure("Use a opção de PNG no editor premium.", 400);
 
   const png = await freeSignaturePng(signature.data, await getLocale());
-  return db.$transaction(async tx => {
+  const result = await db.$transaction(async tx => {
     await lockUser(tx, userId);
     const signatures = await tx.signature.findMany({
       where: { userId }, select: { id: true }, orderBy: { updatedAt: "desc" }, take: 1,
@@ -48,8 +54,15 @@ export async function POST(request: Request) {
     }
     const savedId = id ?? (await tx.signature.create({ data: { userId, data: signature.data } })).id;
     await tx.user.updateMany({ where: { id: userId, firstFreeExportAt: null }, data: { firstFreeExportAt: new Date() } });
-    return new Response(new Uint8Array(png), {
-      headers: { ...privateHeaders, "Content-Type": "image/png", "Content-Disposition": 'attachment; filename="assinatura.png"', "X-Signature-Id": savedId },
-    });
+    return savedId;
+  });
+  if (result instanceof Response) return result;
+  await captureServerEvent({
+    distinctId: userId,
+    event: "signature_exported",
+    properties: { format, premium: signature.premium },
+  });
+  return new Response(new Uint8Array(png), {
+    headers: { ...privateHeaders, "Content-Type": "image/png", "Content-Disposition": 'attachment; filename="assinatura.png"', "X-Signature-Id": result },
   });
 }
