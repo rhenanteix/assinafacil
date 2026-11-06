@@ -1,4 +1,5 @@
 "use client";
+import { useTranslation } from "@/lib/i18n/client";
 import { useRef, useState } from "react";
 import { toast } from "sonner";
 
@@ -9,6 +10,7 @@ export async function jsonRequest<T>(path: string, init?: RequestInit): Promise<
   return data as T;
 }
 export function useSignatureActions() {
+  const t = useTranslation();
   const locked = useRef(false);
   const [busy, setBusy] = useState<string | null>(null);
   async function run(action: string, operation: () => Promise<void>) {
@@ -16,7 +18,7 @@ export function useSignatureActions() {
     locked.current = true;
     setBusy(action);
     try { await operation(); }
-    catch (error) { toast.error(error instanceof Error ? error.message : "Algo deu errado."); }
+    catch (error) { toast.error(t(error instanceof Error ? error.message : "Algo deu errado.")); }
     finally { locked.current = false; setBusy(null); }
   }
   return { busy, run };

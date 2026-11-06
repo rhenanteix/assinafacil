@@ -1,3 +1,4 @@
+import { getLocale } from "@/lib/i18n/server";
 import { z } from "zod";
 import { verifiedUserId } from "@/lib/auth";
 import { db } from "@/lib/prisma";
@@ -27,11 +28,11 @@ export async function POST(request: Request) {
 
   if (format === "html") {
     if (!signature.premium) return failure("A exportação HTML é um recurso premium.", 403);
-    return Response.json({ html: renderSignature(signature.data, true) }, { headers: privateHeaders });
+    return Response.json({ html: renderSignature(signature.data, true, await getLocale()) }, { headers: privateHeaders });
   }
   if (signature.premium) return failure("Use a opção de PNG no editor premium.", 400);
 
-  const png = await freeSignaturePng(signature.data);
+  const png = await freeSignaturePng(signature.data, await getLocale());
   return db.$transaction(async tx => {
     await lockUser(tx, userId);
     const signatures = await tx.signature.findMany({

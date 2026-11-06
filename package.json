@@ -12,7 +12,9 @@
     "typecheck": "tsc --noEmit",
     "postinstall": "prisma generate",
     "db:migrate": "prisma migrate deploy",
-    "test": "node --import tsx --test tests/*.test.ts"
+    "test": "node --import tsx --test tests/*.test.ts",
+    "payments:webhook": "node --import tsx scripts/abacatepay-setup-webhook.ts",
+    "payments:reconcile": "node --import tsx scripts/abacatepay-reconcile.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",

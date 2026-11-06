@@ -1,3 +1,4 @@
+import { translator, type Locale } from "@/lib/i18n/shared";
 import sharp from "sharp";
 import { join } from "node:path";
 import type { z } from "zod";
@@ -8,7 +9,8 @@ function escapeText(text: string) {
     ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&apos;" })[char] ?? char);
 }
 
-export async function freeSignaturePng(data: z.infer<typeof basicSignatureSchema>) {
+export async function freeSignaturePng(data: z.infer<typeof basicSignatureSchema>, locale: Locale = "pt-BR") {
+  const t = translator(locale);
   const width = 920;
   const lines = [
     { text: data.name, color: "#17152b", font: "DejaVu Sans Bold 46", gap: 14 },
@@ -16,7 +18,7 @@ export async function freeSignaturePng(data: z.infer<typeof basicSignatureSchema
     { text: data.company, color: "#344054", font: "DejaVu Sans 30", gap: 10 },
     { text: data.phone, color: "#344054", font: "DejaVu Sans 28", gap: 10 },
     { text: data.email, color: "#344054", font: "DejaVu Sans 28", gap: 28 },
-    { text: "Criado com AssinaFácil", color: "#526078", font: "DejaVu Sans 22", gap: 12 },
+    { text: t("Criado com AssinaFácil"), color: "#526078", font: "DejaVu Sans 22", gap: 12 },
   ].filter(line => line.text);
   const rendered = await Promise.all(lines.map(async line => {
     const result = await sharp({

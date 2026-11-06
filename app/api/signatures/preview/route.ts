@@ -1,3 +1,4 @@
+import { getLocale } from "@/lib/i18n/server";
 import { verifiedUserId } from "@/lib/auth";
 import { signatureAccess } from "@/lib/prisma/signatures";
 import { prepareSignature } from "@/lib/signature/access";
@@ -13,5 +14,5 @@ export async function POST(request: Request) {
   if (!parsed.success) return failure("Dados inválidos.", 400);
   const signature = prepareSignature(parsed.data, await signatureAccess(userId));
   if (!signature?.premium) return failure("Este modelo exige acesso premium.", 403);
-  return Response.json({ html: renderSignature(signature.data, true) }, { headers: { "Cache-Control": "no-store" } });
+  return Response.json({ html: renderSignature(signature.data, true, await getLocale()) }, { headers: { "Cache-Control": "no-store" } });
 }

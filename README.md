@@ -18,7 +18,7 @@ npm run dev
 
 Insira a saída do OpenSSL em `NEXTAUTH_SECRET` antes de iniciar. Abra http://localhost:3000. Use o PostgreSQL do Compose ou ajuste `DATABASE_URL` para sua instância. Se o Docker não oferecer `--wait`, aguarde o PostgreSQL aceitar conexões antes de migrar.
 
-Rotas de interface: `/`, `/gerador`, `/precos`, `/login`, `/cadastro`, `/verificar-email`, `/dashboard`.
+Rotas de interface: `/`, `/gerador`, `/precos`, `/login`, `/cadastro`, `/verificar-email`, `/dashboard`, `/checkout`.
 
 ## Integrações e ambiente
 
@@ -37,11 +37,30 @@ Rotas de interface: `/`, `/gerador`, `/precos`, `/login`, `/cadastro`, `/verific
 | VERIFICATION_FROM_EMAIL | Remetente de um domínio verificado no Resend. Exemplo `AssinaFácil <acesso@seu-dominio.com.br>`. |
 | MP_SANDBOX | Use `true` para sandbox e `false` em produção. |
 
-### Pagamentos
+### Pagamentos — AbacatePay v2
 
-No painel da integração Checkout Pro, habilite o evento **Payments** e configure a URL HTTPS `<origem>/api/payments/webhook` no ambiente correspondente. Para testar localmente, configure um endereço HTTPS público apontando para o servidor e use essa origem em `NEXTAUTH_URL`. Use as credenciais e contas de teste do Mercado Pago.
+O checkout transparente fica em `/checkout?plan=lifetime` (Pro) ou usa `signature-luxe` / `brand-desk`. Pix e boleto ficam no próprio site. Cartão usa o iframe oficial `https://abacatepay.com/abacatepay.js`, somente quando existe a chave pública `pk_...` e a conta tem cartão transparente habilitado. Dados do cartão não passam pelo app. Valores continuam em BRL: Pro R$ 49,90; exclusivos R$ 24,90.
 
-O Pro custa R$ 49,90 em pagamento único, sem expiração. Signature Luxe e Brand Desk custam R$ 24,90 cada, também em pagamento único. Pedidos mensais e anuais existentes preservam seus prazos e seguem recebendo notificações. O checkout hospedado apresenta Pix e cartão conforme a disponibilidade da conta. A interface de retorno nunca concede Pro. O webhook valida HMAC, consulta o pagamento na API, confere pedido, valor e moeda, e grava a aprovação sob bloqueio transacional por usuário. Notificações repetidas não duplicam a extensão. Reembolsos e contestações afetam o pedido correspondente.
+Configuração por ambiente:
+
+- `ABACATEPAY_API_KEY`: chave v2 privada com `TRANSPARENT:CREATE` e `TRANSPARENT:READ`.
+- `ABACATEPAY_PUBLIC_KEY`: chave pública `pk_...` do mesmo ambiente; opcional para Pix/boleto.
+- `ABACATEPAY_WEBHOOK_SECRET`: segredo aleatório privado, compartilhado com o webhook.
+- `ABACATEPAY_ENVIRONMENT`: `test` ou `production`, consistente com a chave. Use bancos separados. Pagamentos de teste não liberam acesso em produção.
+- `NEXTAUTH_URL` e `NEXT_PUBLIC_SITE_URL`: `https://www.maily.com.br` em produção.
+- `NEXTAUTH_SECRET` e um método de confirmação de conta funcional: Resend (`RESEND_API_KEY`, `VERIFICATION_FROM_EMAIL`) ou Google OAuth.
+
+Execute `npm run db:migrate` **antes** de publicar. A migration adiciona campos ao pedido e uma tabela de eventos; preserva as compras antigas. Configure o webhook HTTPS final em `https://www.maily.com.br/api/payments/abacatepay/webhook` para `transparent.completed`, `transparent.refunded`, `transparent.disputed`, `transparent.lost`. O secret é configurado no cadastro do webhook; a AbacatePay o adiciona à query string automaticamente.
+
+`npm run payments:webhook` cadastra o endpoint definido em `NEXTAUTH_URL`; exige também `WEBHOOK:CREATE` e `WEBHOOK:READ`. O script não duplica endpoints existentes. Confirme o secret e os eventos no painel se o endpoint já existir.
+
+O servidor fixa preços e vincula cada cobrança ao pedido e ao usuário. Há bloqueio transacional por usuário, chave de tentativa e reaproveitamento de pedidos pendentes. Em timeout/erro ambíguo, o pedido fica `uncertain`: nunca há retentativa automática de cobrança. O webhook pode recuperar a cobrança pelo `metadata.orderId`. Para reconciliação operacional após confirmar o ID no painel, use `npm run payments:reconcile -- <orderId> <paymentId>`; a ferramenta confere vínculo, valor e ambiente antes de alterar o pedido.
+
+Webhooks verificam secret privado e HMAC do corpo original, consultam a cobrança atual na API, conferem valor/ambiente/vínculo e registram o ID do evento em transação. Repetições e eventos atrasados não duplicam acesso nem desfazem reembolsos. Disputas suspendem acesso; a resolução favorável mais recente pode restabelecê-lo. A consulta autenticada de status limita leituras ao provedor a uma por dez segundos por pedido. Tokens reutilizáveis de cartão e documentos do pagador não são persistidos ou devolvidos ao navegador.
+
+O endpoint legado `/api/payments/webhook` continua atendendo exclusivamente pedidos Mercado Pago. Mantenha suas credenciais antigas enquanto houver pagamentos que possam receber notificações. Novas compras usam apenas AbacatePay.
+
+Documentação utilizada: [checkout transparente](https://docs.abacatepay.com/pages/transparents/reference), [cartão](https://docs.abacatepay.com/pages/transparents/card), [script do cartão](https://docs.abacatepay.com/pages/transparents/abacatepay-js), [segurança dos webhooks](https://docs.abacatepay.com/pages/webhooks/security), [eventos](https://docs.abacatepay.com/pages/webhooks/events/transparent).
 
 ### Business
 
@@ -99,7 +118,9 @@ node --import tsx examples/generate.ts
 | GET, POST | /api/signatures | Listar ou criar assinaturas do usuário |
 | PATCH, DELETE | /api/signatures/:id | Editar ou excluir assinatura do usuário |
 | POST | /api/upload | Upload autenticado de imagem de até 3 MB |
-| POST | /api/payments/checkout | Criar preferência Pro ou modelo exclusivo |
+| POST | /api/payments/checkout | Criar/reutilizar cobrança transparente autenticada |
+| GET | /api/payments/orders/:id | Consultar pagamento do usuário autenticado |
+| POST | /api/payments/abacatepay/webhook | Validar e reconciliar eventos AbacatePay |
 | POST | /api/payments/webhook | Processar evento assinado do Mercado Pago |
 
 ## Árvore completa

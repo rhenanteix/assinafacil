@@ -1,5 +1,5 @@
 import { mercadoPago, verifyWebhook } from "@/lib/mercado-pago";
-import { isPlan, plans } from "@/lib/mercado-pago/plans";
+import { isPlan, plans } from "@/lib/payments/plans";
 import { db } from "@/lib/prisma";
 import { lockUser } from "@/lib/prisma/signatures";
 import { failure } from "@/lib/utils/http";
@@ -18,7 +18,7 @@ export async function POST(request: Request) {
     const payment = await mercadoPago<Payment>(`/v1/payments/${id}`);
     if (!payment.external_reference || String(payment.id) !== id) return Response.json({ ok: true });
     const order = await db.order.findUnique({ where: { id: payment.external_reference } });
-    if (!order || !isPlan(order.plan) || payment.currency_id !== "BRL" || Math.round(payment.transaction_amount * 100) !== order.cents) return Response.json({ ok: true });
+    if (!order || order.provider !== "mercado_pago" || !isPlan(order.plan) || payment.currency_id !== "BRL" || Math.round(payment.transaction_amount * 100) !== order.cents) return Response.json({ ok: true });
     const plan = plans[order.plan];
     const status = payment.status;
     if (!["approved", "refunded", "charged_back", "cancelled", "in_mediation"].includes(status)) return Response.json({ ok: true });

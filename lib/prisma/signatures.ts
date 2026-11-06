@@ -3,7 +3,7 @@ import { db } from ".";
 
 export async function signatureAccess(userId: string, client: Prisma.TransactionClient = db) {
   const orders = await client.order.findMany({
-    where: { userId, status: "approved", OR: [{ plan: { in: ["lifetime", "signature-luxe", "brand-desk"] } }, { expiresAt: { gt: new Date() } }] },
+    where: { userId, status: "approved", devMode: process.env.ABACATEPAY_ENVIRONMENT === "test", OR: [{ plan: { in: ["lifetime", "signature-luxe", "brand-desk"] } }, { expiresAt: { gt: new Date() } }] },
     select: { plan: true },
   });
   const owned = orders.map(order => order.plan).filter(plan => plan === "signature-luxe" || plan === "brand-desk");

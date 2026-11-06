@@ -65,8 +65,20 @@ model Order {
   plan       String
   cents      Int
   paymentId  String?  @unique
+  provider   String   @default("mercado_pago")
+  checkoutKey String? @unique
+  method     String?
+  devMode    Boolean  @default(false)
+  paymentData Json?
+  paymentUpdatedAt DateTime?
+  lastCheckedAt DateTime?
   status     String   @default("pending")
   expiresAt  DateTime?
   createdAt  DateTime @default(now())
   @@index([userId, status, expiresAt])
+}
+
+model PaymentEvent {
+  id String @id
+  processedAt DateTime @default(now())
 }
