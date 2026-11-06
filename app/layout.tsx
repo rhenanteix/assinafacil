@@ -13,7 +13,10 @@ export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslator();
   return {
   metadataBase: publicSiteUrl(),
-  icons: { icon: { url: "/icon.svg", type: "image/svg+xml" } },
+  icons: {
+    icon: { url: "/mascote/boas-vindas.png", type: "image/png" },
+    apple: { url: "/mascote/boas-vindas.png", type: "image/png" },
+  },
   title: { default: t("AssinaFácil | Assinaturas profissionais de e-mail"), template: "%s | AssinaFácil" },
   description: t("Crie uma assinatura profissional de e-mail em minutos. Personalize templates e exporte em HTML ou PNG."),
   openGraph: { title: "AssinaFácil", description: t("Crie sua assinatura profissional de e-mail com prévia ao vivo."), locale: (await getLocale()) === "en" ? "en_US" : "pt_BR", type: "website" },

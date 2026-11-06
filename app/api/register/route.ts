@@ -19,6 +19,16 @@ export async function POST(request: Request) {
     return Response.json({ ok: true, verificationSent }, { status: 201 });
   } catch (error) {
     if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") return failure("Já existe uma conta com este e-mail.", 409);
+    // Do not log the raw Prisma error: it may include input data or connection details.
+    const code = error instanceof Prisma.PrismaClientKnownRequestError ? error.code
+      : error instanceof Prisma.PrismaClientInitializationError ? error.errorCode : undefined;
+    console.error("[register] creation_failed", {
+      code: code ?? "UNKNOWN",
+      reason: code === "P2021" || code === "P2022" ? "database_schema_outdated"
+        : code === "P1000" ? "database_authentication"
+        : code === "P1001" || code === "P1002" || code === "P2024" ? "database_connection"
+        : "database_or_server_error",
+    });
     return failure("Cadastro indisponível no momento.", 503);
   }
 }

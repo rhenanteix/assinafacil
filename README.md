@@ -163,11 +163,11 @@ O endpoint legado `/api/payments/webhook` atende pedidos Mercado Pago. Preserve 
   <img src="mascote/Joyful%20leaping%20cat%20delivering%20an%20envelope-3.png" width="200" alt="Mascote do Maily entregando um envelope" />
 </p>
 
-Na Vercel, importe a raiz do projeto com preset **Next.js**, Node.js 22+ e comando de build `npm run build`.
+Na Vercel, importe a raiz do projeto com preset **Next.js** e Node.js 22+. O `vercel.json` usa `node scripts/vercel-build.mjs`: em produção, aplica migrations antes do build e interrompe o deploy se elas falharem. Em preview, executa apenas o build.
 
 1. Configure as variáveis no ambiente **Production**, incluindo Resend, AbacatePay e banco.
 2. Defina `NEXTAUTH_URL` e `NEXT_PUBLIC_SITE_URL` como `https://www.maily.com.br`.
-3. Execute `npm run db:migrate` com `DATABASE_URL` apontando para o **banco de produção**. O build não aplica migrations automaticamente.
+3. Confira que `DATABASE_URL` aponta para o **banco de produção** e permite migrations. O build da Vercel executa `npm run db:migrate` automaticamente apenas quando `VERCEL_ENV=production`. O comando local `npm run build` continua sem alterar o banco.
 4. Publique o código e confira se o domínio atende a nova versão.
 5. Cadastre ou confira o webhook AbacatePay para o domínio final.
 6. Valide cadastro, recebimento do e-mail, confirmação, login e exportação Free.

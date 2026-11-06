@@ -1,5 +1,4 @@
 import { translator, type Locale } from "@/lib/i18n/shared";
-import sharp from "sharp";
 import { join } from "node:path";
 import type { z } from "zod";
 import type { basicSignatureSchema } from "@/types/signature";
@@ -10,6 +9,10 @@ function escapeText(text: string) {
 }
 
 export async function freeSignaturePng(data: z.infer<typeof basicSignatureSchema>, locale: Locale = "pt-BR") {
+  // Serverless Linux runtimes may not ship /etc/fonts/fonts.conf.
+  // Set our bundled configuration before loading the native renderer.
+  process.env.FONTCONFIG_FILE ??= join(process.cwd(), "assets", "fonts", "fonts.conf");
+  const { default: sharp } = await import("sharp");
   const t = translator(locale);
   const width = 920;
   const lines = [
