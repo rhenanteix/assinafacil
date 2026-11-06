@@ -1,0 +1,1 @@
+{"style":"new-york","rsc":true,"tsx":true,"tailwind":{"config":"tailwind.config.ts","css":"styles/globals.css","baseColor":"slate","cssVariables":false},"aliases":{"components":"@/components","utils":"@/lib/utils/cn","ui":"@/components/ui","lib":"@/lib","hooks":"@/hooks"},"iconLibrary":"lucide"}

@@ -1,0 +1,158 @@
+assinafacil/
+├── app/
+│   ├── (auth)/
+│   │   ├── cadastro/
+│   │   │   └── page.tsx
+│   │   ├── login/
+│   │   │   └── page.tsx
+│   │   └── verificar-email/
+│   │       └── page.tsx
+│   ├── (dashboard)/
+│   │   └── dashboard/
+│   │       └── page.tsx
+│   ├── (marketing)/
+│   │   ├── gerador/
+│   │   │   └── page.tsx
+│   │   ├── precos/
+│   │   │   └── page.tsx
+│   │   └── page.tsx
+│   ├── api/
+│   │   ├── auth/
+│   │   │   ├── [...nextauth]/
+│   │   │   │   └── route.ts
+│   │   │   ├── resend-verification/
+│   │   │   │   └── route.ts
+│   │   │   └── verify-email/
+│   │   │       └── route.ts
+│   │   ├── payments/
+│   │   │   ├── checkout/
+│   │   │   │   └── route.ts
+│   │   │   └── webhook/
+│   │   │       └── route.ts
+│   │   ├── preview/
+│   │   │   └── route.ts
+│   │   ├── register/
+│   │   │   └── route.ts
+│   │   ├── signatures/
+│   │   │   ├── [id]/
+│   │   │   │   └── route.ts
+│   │   │   ├── export/
+│   │   │   │   └── route.ts
+│   │   │   ├── preview/
+│   │   │   │   └── route.ts
+│   │   │   └── route.ts
+│   │   └── upload/
+│   │       └── route.ts
+│   ├── error.tsx
+│   ├── icon.svg
+│   ├── layout.tsx
+│   ├── robots.ts
+│   └── sitemap.ts
+├── assets/
+│   └── fonts/
+│       ├── DejaVuSans-Bold.ttf
+│       ├── DejaVuSans.ttf
+│       └── LICENSE.txt
+├── components/
+│   ├── layout/
+│   │   └── Header.tsx
+│   ├── marketing/
+│   │   ├── Offers.tsx
+│   │   ├── ProductShowcase.tsx
+│   │   └── Reveal.tsx
+│   ├── shared/
+│   │   ├── AuthForm.tsx
+│   │   ├── CheckoutButton.tsx
+│   │   ├── DashboardActions.tsx
+│   │   └── VerifyEmail.tsx
+│   ├── signature/
+│   │   ├── FormFields.tsx
+│   │   ├── SignatureBuilder.tsx
+│   │   ├── SignaturePreview.tsx
+│   │   └── TemplateSelector.tsx
+│   └── ui/
+│       ├── button.tsx
+│       └── input.tsx
+├── examples/
+│   ├── banner.html
+│   ├── brand-desk.html
+│   ├── classic.html
+│   ├── color.html
+│   ├── compact.html
+│   ├── consulting.html
+│   ├── editorial.html
+│   ├── essential.png
+│   ├── executive.html
+│   ├── generate.ts
+│   ├── minimal.html
+│   ├── modern.html
+│   ├── monogram.html
+│   ├── sales.html
+│   ├── signature-luxe.html
+│   └── studio.html
+├── hooks/
+│   ├── use-signature-actions.ts
+│   └── use-signature-draft.ts
+├── lib/
+│   ├── auth/
+│   │   ├── destination.ts
+│   │   ├── index.ts
+│   │   └── verification.ts
+│   ├── mercado-pago/
+│   │   ├── config.ts
+│   │   ├── index.ts
+│   │   └── plans.ts
+│   ├── prisma/
+│   │   ├── index.ts
+│   │   └── signatures.ts
+│   ├── signature/
+│   │   ├── access.ts
+│   │   ├── free-png.ts
+│   │   └── icons.ts
+│   └── utils/
+│       ├── cn.ts
+│       ├── http.ts
+│       ├── signature.ts
+│       └── site-url.ts
+├── prisma/
+│   ├── migrations/
+│   │   ├── 20261105000000_init/
+│   │   │   └── migration.sql
+│   │   ├── 20261105020000_free_export/
+│   │   │   └── migration.sql
+│   │   └── migration_lock.toml
+│   └── schema.prisma
+├── public/
+│   ├── social/
+│   │   ├── facebook.png
+│   │   ├── github.png
+│   │   ├── instagram.png
+│   │   ├── LICENSE.txt
+│   │   ├── linkedin.png
+│   │   ├── tiktok.png
+│   │   ├── whatsapp.png
+│   │   ├── x.png
+│   │   └── youtube.png
+│   └── assinafacil.svg
+├── scripts/
+│   └── generate-social-icons.mjs
+├── styles/
+│   └── globals.css
+├── tests/
+│   └── signature.test.ts
+├── types/
+│   ├── next-auth.d.ts
+│   ├── signature.ts
+│   └── social.ts
+├── .env.example
+├── .gitignore
+├── ARVORE.txt
+├── components.json
+├── compose.yaml
+├── next.config.ts
+├── package-lock.json
+├── package.json
+├── postcss.config.mjs
+├── README.md
+├── tailwind.config.ts
+└── tsconfig.json

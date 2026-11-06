@@ -1,0 +1,3 @@
+ALTER TABLE "User" ADD COLUMN "createdAt" TIMESTAMP(3),
+                   ADD COLUMN "firstFreeExportAt" TIMESTAMP(3);
+ALTER TABLE "User" ALTER COLUMN "createdAt" SET DEFAULT CURRENT_TIMESTAMP;
