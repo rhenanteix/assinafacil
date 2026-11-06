@@ -429,5 +429,10 @@
   "Notificações da Maily": "Maily notifications",
   "Fechar notificação": "Dismiss notification",
   "Conta criada com sucesso.": "Account created successfully.",
-  "Você entrou com sucesso.": "You signed in successfully."
+  "Você entrou com sucesso.": "You signed in successfully.",
+  "Ops! Página não encontrada.": "Oops! Page not found.",
+  "Parece que o endereço que você tentou acessar não existe ou foi movido. O gatinho não conseguiu encontrar essa página.": "It seems the address you tried to access doesn't exist or was moved. Our cat couldn't find that page.",
+  "Voltar para o início": "Back to home",
+  "Ver modelos": "Browse templates",
+  "Se o problema persistir, entre em contato conosco.": "If the problem persists, contact us."
 }

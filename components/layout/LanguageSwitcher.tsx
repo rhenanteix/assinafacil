@@ -9,15 +9,49 @@ export function LanguageSwitcher() {
   const locale = useLocale();
   const router = useRouter();
   const [pending, startTransition] = useTransition();
-  return <label className="flex items-center gap-2 text-xs">
-    <span className="sr-only">{locale === "en" ? "Language" : "Idioma"}</span>
-    <select value={locale} disabled={pending} aria-busy={pending} className="min-h-11 rounded-lg border border-violet-200 bg-white px-2 text-sm text-brand" onChange={event => {
-      const next = resolveLocale(event.target.value);
-      document.cookie = `${localeCookie}=${next}; Path=/; Max-Age=31536000; SameSite=Lax${location.protocol === "https:" ? "; Secure" : ""}`;
-      startTransition(() => router.refresh());
-    }}>
-      <option value="pt-BR" lang="pt-BR">PT-BR</option>
-      <option value="en" lang="en">English</option>
-    </select>
-  </label>;
+  return (
+    <div className="flex items-center gap-2">
+      <span className="sr-only">{locale === "en" ? "Language" : "Idioma"}</span>
+      <div className="flex overflow-hidden rounded-lg border border-violet-200 bg-white shadow-sm">
+        <button
+          type="button"
+          disabled={pending}
+          aria-pressed={locale === "pt-BR"}
+          aria-label="Português (Brasil)"
+          onClick={() => {
+            if (locale === "pt-BR") return;
+            document.cookie = `${localeCookie}=pt-BR; Path=/; Max-Age=31536000; SameSite=Lax${location.protocol === "https:" ? "; Secure" : ""}`;
+            startTransition(() => router.refresh());
+          }}
+          className={`flex items-center gap-1.5 px-3 py-2 text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-violet-400 focus:ring-inset disabled:opacity-50 disabled:cursor-not-allowed ${
+            locale === "pt-BR"
+              ? "bg-violet-600 text-white"
+              : "bg-white text-brand hover:bg-violet-50"
+          }`}
+        >
+          <span className="text-base leading-none">🇧🇷</span>
+          <span>PT-BR</span>
+        </button>
+        <button
+          type="button"
+          disabled={pending}
+          aria-pressed={locale === "en"}
+          aria-label="English (US)"
+          onClick={() => {
+            if (locale === "en") return;
+            document.cookie = `${localeCookie}=en; Path=/; Max-Age=31536000; SameSite=Lax${location.protocol === "https:" ? "; Secure" : ""}`;
+            startTransition(() => router.refresh());
+          }}
+          className={`flex items-center gap-1.5 px-3 py-2 text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-violet-400 focus:ring-inset disabled:opacity-50 disabled:cursor-not-allowed ${
+            locale === "en"
+              ? "bg-violet-600 text-white"
+              : "bg-white text-brand hover:bg-violet-50"
+          }`}
+        >
+          <span className="text-base leading-none">🇺🇸</span>
+          <span>English</span>
+        </button>
+      </div>
+    </div>
+  );
 }
