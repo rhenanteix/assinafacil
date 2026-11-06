@@ -2,6 +2,7 @@ import { prepareSignatureImage } from "@/lib/signature/image";
 import { v2 as cloudinary } from "cloudinary";
 import { verifiedUserId } from "@/lib/auth";
 import { signatureAccess } from "@/lib/prisma/signatures";
+import { captureServerEvent } from "@/lib/posthog-server";
 import { failure, sameOrigin } from "@/lib/utils/http";
 export const runtime = "nodejs";
 const limit = 3 * 1024 * 1024;
@@ -34,6 +35,11 @@ export async function POST(request: Request) {
         if (error || !result) reject(error ?? new Error("Upload sem retorno."));
         else resolve(result.secure_url);
       }).end(prepared);
+    });
+    await captureServerEvent({
+      distinctId: userId,
+      event: "signature_image_uploaded",
+      properties: { image_type: kind },
     });
     return Response.json({ url });
   } catch { return failure("Falha no envio. Tente novamente.", 502); }
