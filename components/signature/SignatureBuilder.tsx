@@ -46,13 +46,14 @@ export function SignatureBuilder({ initial = emptySignature, pro = false, signed
     if (!file) return;
     await run(kind, async () => {
       const body = new FormData();
+      body.append("kind", kind);
       body.set("file", file);
       const { url } = await jsonRequest<{ url: string }>("/api/upload", { method: "POST", body });
       form.setValue(kind, url, { shouldValidate: true, shouldDirty: true });
       toast.success(t("Imagem adicionada."));
     });
   }
-  async function premiumHtml(value: SignatureData) {
+  async function exportHtml(value: SignatureData) {
     return (await jsonRequest<{ html: string }>("/api/signatures/export", {
       method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ data: value, format: "html" }),
     })).html;
@@ -70,6 +71,7 @@ export function SignatureBuilder({ initial = emptySignature, pro = false, signed
       <FormFields form={form} premium={premium} />
       {premium && <>
         <div className="grid gap-4 sm:grid-cols-2">
+          <p className="text-xs text-slate-600">{t("Foto: recorte central circular em PNG de 256 × 256 px. Logo: proporção preservada em fundo transparente. Até 3 MB; imagens podem ser bloqueadas pelo destinatário.")}</p>
           {(["photo", "logo"] as const).map(kind => <div key={kind} className="space-y-2">
             <label className="block text-sm font-medium">{kind === "photo" ? t("Foto de perfil") : "Logo"}
               <input className="mt-2 block w-full text-xs" type="file" accept="image/jpeg,image/png,image/webp" disabled={!!busy} onChange={event => { const file = event.target.files?.[0]; event.target.value = ""; void upload(kind, file); }} />
@@ -89,16 +91,15 @@ export function SignatureBuilder({ initial = emptySignature, pro = false, signed
       </div>
       {!signedIn && <p className="text-sm text-slate-700">{needsVerification ? t("Confirme seu e-mail") : t("Crie sua conta gratuita")} {" "}{t("para salvar e baixar. Seus dados preenchidos acompanham o cadastro.")}</p>}
       <div className="flex flex-wrap gap-2" aria-busy={!!busy}>
-        {premium ? <Button type="button" disabled={!!busy} onClick={submit("copy", async value => {
-          const html = premiumHtml(value);
+        <Button type="button" disabled={!!busy || lockedTemplate} onClick={submit("copy", async value => {
+          const html = exportHtml(value);
           if (typeof ClipboardItem !== "undefined" && navigator.clipboard?.write) {
             const item = new ClipboardItem({ "text/html": html.then(content => new Blob([content], { type: "text/html" })), "text/plain": html.then(content => new Blob([content], { type: "text/plain" })) });
             try { await navigator.clipboard.write([item]); }
             catch { await navigator.clipboard.writeText(await html); toast.success(t("Código HTML copiado.")); return; }
           } else { await navigator.clipboard.writeText(await html); }
           toast.success(t("HTML copiado."));
-        })}><Clipboard size={16} />{busy === "copy" ? t("Copiando…") : t("Copiar HTML")}</Button> :
-          <Button asChild variant="outline"><Link href="/precos">{t("Desbloquear HTML e links clicáveis")}</Link></Button>}
+        })}><Clipboard size={16} />{busy === "copy" ? t("Copiando…") : t("Copiar HTML")}</Button>
         <Button type="button" variant="outline" disabled={!!busy || lockedTemplate} onClick={submit("png", async value => {
           if (!premium) {
             const response = await fetch("/api/signatures/export", {
@@ -116,7 +117,7 @@ export function SignatureBuilder({ initial = emptySignature, pro = false, signed
             return;
           }
           // Revalidate access at export time and wait for matching preview content.
-          await premiumHtml(value);
+          await exportHtml(value);
           const node = capture.current;
           if (!node || node.dataset.previewKey !== JSON.stringify(value)) throw new Error(t("Aguarde a atualização da prévia e tente novamente."));
           await Promise.all(Array.from(node.querySelectorAll("img")).map(image => image.decode()));
@@ -138,7 +139,7 @@ export function SignatureBuilder({ initial = emptySignature, pro = false, signed
           toast.success(t("Assinatura salva."));
         })}><Save size={16} />{busy === "save" ? t("Salvando…") : t("Salvar assinatura")}</Button>
       </div>
-      <p className="text-xs leading-relaxed text-slate-600">{premium ? t("Cole o HTML nas configurações do e-mail para manter os links clicáveis. O PNG é uma imagem.") : t("O Essencial tem layout e cor fixos. O PNG inclui a marca Maily e os contatos aparecem como texto na imagem.")}</p>
+      <p className="text-xs leading-relaxed text-slate-600">{premium ? t("Cole o HTML nas configurações do e-mail para manter os links clicáveis. O PNG é uma imagem.") : t("O Essencial inclui HTML com links clicáveis e PNG, com layout fixo e marca Maily.")}</p>
       {signedIn && <Link href="/dashboard" className="block text-sm text-brand underline">{t("Abrir minhas assinaturas")}</Link>}
     </section>
   </form>;

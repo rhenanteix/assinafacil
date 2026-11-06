@@ -9,7 +9,7 @@ import { ProductShowcase } from "@/components/marketing/ProductShowcase";
 import { Reveal } from "@/components/marketing/Reveal";
 import { Offers, BusinessLink } from "@/components/marketing/Offers";
 import { renderSignature } from "@/lib/utils/signature";
-import { demo, templates } from "@/types/signature";
+import { demoDemos, templates } from "@/types/signature";
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslator();
@@ -20,9 +20,9 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 const highlights = [
-  { icon: PenLine, title: "Preencha seus dados", text: "Adicione nome, cargo, empresa e contatos para experimentar o Essencial grátis." },
-  { icon: Palette, title: "Coloque sua marca", text: "No premium, escolha um modelo e personalize cores, foto, logo e redes sociais com ícones." },
-  { icon: Mail, title: "Leve para o seu e-mail", text: "Confirme seu cadastro para baixar o PNG grátis. Desbloqueie o HTML premium para ter links clicáveis." },
+  { icon: PenLine, title: "Preencha seus dados", text: "Comece com nome, cargo e e-mail. Adicione mais se precisar." },
+  { icon: Palette, title: "Coloque sua marca", text: "No Pro, personalize cores, foto, logo e ícones sociais." },
+  { icon: Mail, title: "Leve para o seu e-mail", text: "Copie o HTML com links clicáveis ou baixe o PNG, também no Free." },
 ];
 const examples = ["modern", "consulting", "sales", "editorial", "signature-luxe", "brand-desk"] as const;
 
@@ -54,16 +54,27 @@ export default async function Home() {
       </Reveal>)}</div>
     </section>
     <section id="modelos" className="scroll-mt-8 border-y border-violet-100 bg-[#f1eeff] py-16 sm:py-20">
-      <div className="shell"><p className="eyebrow flex items-center gap-2"><LayoutTemplate size={16} /> {" "}{t("Galeria")}</p><h2 className="mt-3 text-4xl font-bold tracking-tight sm:text-5xl">{t("Um modelo para cada tipo de negócio")}</h2><p className="mb-8 mt-3 text-slate-700">{t("Os modelos abaixo são premium. Veja uma seleção de estilos para consultoria, vendas, equipes e marcas com identidade própria.")}</p>
+      <div className="shell"><p className="eyebrow flex items-center gap-2"><LayoutTemplate size={16} /> {" "}{t("Galeria")}</p><h2 className="mt-3 text-4xl font-bold tracking-tight sm:text-5xl">{t("Um modelo para cada tipo de negócio")}</h2><p className="mb-8 mt-3 text-slate-700">{t("Exemplos Pro com o essencial. Você escolhe o que adicionar.")}</p>
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">{examples.map(id => {
+          const demo = demoDemos[id];
           const template = templates.find(item => item.id === id)!;
           const tier = "exclusive" in template ? t("Exclusivo") : template.pro ? "Pro" : "Free";
           const color = id === "sales" ? "#087c66" : id === "signature-luxe" ? "#936d38" : "#593bec";
           return <Reveal key={id} className="panel transition-shadow hover:shadow-lg"><div className="mb-4 flex items-center justify-between gap-2"><h3 className="font-bold">{t(template.label)}</h3><span className="rounded-full bg-violet-100 px-2.5 py-1 text-xs font-bold text-brand">{tier}</span></div>
-            <div className="min-h-36 rounded-xl border border-slate-100 p-2" dangerouslySetInnerHTML={{ __html: renderSignature({ ...demo, role: t(demo.role), company: t(demo.company), template: id, color, instagram: "https://instagram.com/example", linkedin: "https://linkedin.com/in/example" }, template.pro, locale) }} />
+            <div className="min-h-36 rounded-xl border border-slate-100 p-2" dangerouslySetInnerHTML={{ __html: renderSignature({ ...demo, role: t(demo.role), company: t(demo.company), template: id, color }, template.pro, locale) }} />
           </Reveal>;
         })}</div>
         <div className="mt-6 flex flex-wrap gap-3"><Button asChild><Link href="/gerador">{t("Experimentar no gerador")}{" "}<ArrowRight size={16} /></Link></Button><Button asChild variant="outline"><Link href="/precos#exclusivos">{t("Ver modelos exclusivos")}</Link></Button></div></div>
+    </section>
+    <section className="shell py-12">
+      <h2 className="text-3xl font-bold tracking-tight">{t("Seu estilo, além do modelo.")}</h2>
+      <div className="mt-6 grid gap-4 md:grid-cols-3">{[
+        ["Cores, foto e logo", "Ajuste a identidade visual e escolha quais contatos mostrar."],
+        ["Redes com ícones", "WhatsApp, Instagram, Facebook, TikTok e outras redes, com links no HTML."],
+        ["Faixa de marca", "Os modelos Com banner e Brand Desk incluem uma faixa com o nome da empresa."],
+      ].map(([title, description]) => <article key={title} className="panel"><h3 className="font-bold">{t(title)}</h3><p className="mt-2 text-sm text-slate-600">{t(description)}</p></article>)}</div>
+      <details className="mt-5 text-sm text-slate-600"><summary className="cursor-pointer font-semibold">{t("O que está disponível hoje?")}</summary><p className="mt-2">{t("Personalização nos layouts disponíveis e instalação manual no e-mail. Ainda não oferecemos analytics de cliques, IA ou integração automática com Gmail e Outlook.")}</p></details>
+      <div className="mt-8 flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-violet-50 p-5"><div><h3 className="font-bold">{t("Veja antes de escolher")}</h3><p className="mt-1 text-sm text-slate-600">{t("Prévia ao vivo, exemplos reais do editor e Free sem cartão.")}</p></div><Link href="/gerador" className="font-semibold text-brand underline">{t("Criar grátis")}</Link></div>
     </section>
     <section id="planos" className="shell scroll-mt-8 py-16 sm:py-20">
       <div className="mb-8 flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
@@ -77,7 +88,7 @@ export default async function Home() {
     </Reveal></section>
     <section className="shell py-16"><h2 className="text-3xl font-bold tracking-tight">{t("Perguntas frequentes")}</h2><div className="mt-5 grid gap-3">
       {[
-        [t("Qual modelo é grátis?"), t("O Essencial é grátis. Tem layout e cor fixos, campos de nome, cargo, empresa, telefone e e-mail. Confirme seu cadastro para salvar uma assinatura e baixar o PNG com a marca Maily.")],
+        [t("Qual modelo é grátis?"), t("O Essencial é grátis, com HTML clicável e PNG. Inclui layout fixo, marca Maily e uma assinatura salva após confirmar o cadastro.")],
         [t("O Pro tem mensalidade?"), t("O Pro tem pagamento único e acesso sem expiração aos modelos incluídos no plano. Os modelos exclusivos são vendidos individualmente.")],
         [t("Qual é a diferença entre HTML e PNG?"), t("O HTML permite manter links clicáveis em clientes compatíveis. O PNG é uma imagem e pode ser inserido onde o cliente de e-mail aceitar imagens.")],
         [t("Como funciona o Business?"), t("O orçamento depende do tamanho do lote e da personalização. A empresa aprova um modelo piloto antes da produção das assinaturas.")],

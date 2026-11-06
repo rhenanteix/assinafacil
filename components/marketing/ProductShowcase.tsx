@@ -31,7 +31,7 @@ export function ProductShowcase() {
         </div>
         <label className="grid gap-2 rounded-xl bg-white p-3 text-xs font-semibold">{t("Experimente com seu nome")}{" "}<input value={name} onChange={e => setName(e.target.value)} maxLength={60} className="min-w-0 rounded-lg border border-slate-300 px-2 py-2 text-sm" />
         </label>
-        <p className="flex items-start gap-2 text-sm text-slate-700"><span>{t("Essencial grátis em PNG.")}{" "}<Link href="/precos" className="font-semibold text-brand underline">{t("Conheça os modelos com logo e ícones sociais.")}</Link></span></p>
+        <p className="flex items-start gap-2 text-sm text-slate-700"><span>{t("HTML clicável, também no Free.")}{" "}<Link href="/precos" className="font-semibold text-brand underline">{t("Conheça os modelos com logo e ícones sociais.")}</Link></span></p>
       </div>
     </motion.div>
   </div>;

@@ -27,8 +27,10 @@ export async function POST(request: Request) {
   if (!signature) return failure("Desbloqueie este modelo para exportar.", 403);
 
   if (format === "html") {
-    if (!signature.premium) return failure("A exportação HTML é um recurso premium.", 403);
-    return Response.json({ html: renderSignature(signature.data, true, await getLocale()) }, { headers: privateHeaders });
+    if (!signature.premium) {
+      await db.user.updateMany({ where: { id: userId, firstFreeExportAt: null }, data: { firstFreeExportAt: new Date() } });
+    }
+    return Response.json({ html: renderSignature(signature.data, signature.premium, await getLocale(), new URL(request.url).origin) }, { headers: privateHeaders });
   }
   if (signature.premium) return failure("Use a opção de PNG no editor premium.", 400);
 

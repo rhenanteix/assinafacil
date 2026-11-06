@@ -21,6 +21,11 @@ export async function freeSignaturePng(data: z.infer<typeof basicSignatureSchema
     { text: data.company, color: "#344054", font: "DejaVu Sans 30", gap: 10 },
     { text: data.phone, color: "#344054", font: "DejaVu Sans 28", gap: 10 },
     { text: data.email, color: "#344054", font: "DejaVu Sans 28", gap: 28 },
+    { text: data.whatsapp ? `WhatsApp: ${data.whatsapp}` : "", color: "#344054", font: "DejaVu Sans 24", gap: 10 },
+    { text: [data.professionalRegistrationType, data.professionalRegistration].filter(Boolean).join(" "), color: "#344054", font: "DejaVu Sans 24", gap: 10 },
+    { text: data.cnpj ? `CNPJ: ${data.cnpj}` : "", color: "#344054", font: "DejaVu Sans 24", gap: 10 },
+    { text: data.address, color: "#344054", font: "DejaVu Sans 24", gap: 10 },
+    { text: data.legalNotice, color: "#526078", font: "DejaVu Sans 20", gap: 14 },
     { text: t("Criado com Maily"), color: "#526078", font: "DejaVu Sans 22", gap: 12 },
   ].filter(line => line.text);
   const rendered = await Promise.all(lines.map(async line => {

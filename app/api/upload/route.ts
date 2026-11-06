@@ -1,3 +1,4 @@
+import { prepareSignatureImage } from "@/lib/signature/image";
 import { v2 as cloudinary } from "cloudinary";
 import { verifiedUserId } from "@/lib/auth";
 import { signatureAccess } from "@/lib/prisma/signatures";
@@ -21,7 +22,10 @@ export async function POST(request: Request) {
   const jpeg = bytes.subarray(0, 3).equals(Buffer.from("ffd8ff", "hex"));
   const webp = bytes.toString("ascii", 0, 4) === "RIFF" && bytes.toString("ascii", 8, 12) === "WEBP";
   if (!png && !jpeg && !webp) return failure("Use uma imagem PNG, JPEG ou WebP.", 400);
+  const kind = body?.get("kind");
+  if (kind !== "photo" && kind !== "logo") return failure("Tipo de imagem inválido.", 400);
   try {
+    const prepared = await prepareSignatureImage(bytes, kind);
     const url = await new Promise<string>((resolve, reject) => {
       cloudinary.uploader.upload_stream({
         resource_type: "image", folder: "assinafacil", allowed_formats: ["png", "jpg", "jpeg", "webp"],
@@ -29,7 +33,7 @@ export async function POST(request: Request) {
       }, (error, result) => {
         if (error || !result) reject(error ?? new Error("Upload sem retorno."));
         else resolve(result.secure_url);
-      }).end(bytes);
+      }).end(prepared);
     });
     return Response.json({ url });
   } catch { return failure("Falha no envio. Tente novamente.", 502); }

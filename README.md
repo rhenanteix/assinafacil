@@ -36,7 +36,7 @@ O projeto nasceu como **AssinaFácil**. Esse nome ainda aparece no nome do pacot
 
 | Opção | O que inclui | Preço |
 | --- | --- | --- |
-| Essencial Free | Uma assinatura com layout e cor fixos; nome, cargo, empresa, telefone e e-mail; exportação PNG com marca | Gratuito |
+| Essencial Free | Uma assinatura com layout e cor fixos; contatos, WhatsApp, registro profissional, CNPJ, endereço e aviso opcional; exportação HTML clicável e PNG com marca | Gratuito |
 | Pro | 12 modelos padrão adicionais, personalização, imagens, redes sociais e exportação HTML/PNG | R$ 49,90, pagamento único |
 | Signature Luxe | Modelo exclusivo, adquirido individualmente | R$ 24,90 |
 | Brand Desk | Modelo exclusivo, adquirido individualmente | R$ 24,90 |
@@ -55,7 +55,7 @@ Os valores são definidos no servidor em [lib/payments/plans.ts](lib/payments/pl
 3. Usa o Essencial ou adquire acesso aos modelos premium.
 4. Exporta a assinatura e a configura no cliente de e-mail.
 
-O HTML usa tabelas e estilos inline. O PNG é uma imagem e **não preserva links clicáveis**. Clientes de e-mail podem bloquear imagens externas; por isso, os ícones e imagens precisam de URLs públicas acessíveis.
+O HTML usa tabelas e estilos inline. O PNG é uma imagem e **não preserva links clicáveis**. Clientes de e-mail podem bloquear imagens externas; por isso, fotos e logos precisam de URLs públicas acessíveis; os ícones sociais usam PNGs públicos em `/social`, com texto alternativo. Configure `NEXT_PUBLIC_SITE_URL` com a origem HTTPS de produção.
 
 ## Rodar localmente
 
@@ -92,8 +92,8 @@ Use [.env.example](.env.example) como referência. **Nunca publique arquivos `.e
 | `DATABASE_URL` | Conexão PostgreSQL. A conexão usada nas migrations precisa permitir alterações no schema. |
 | `NEXTAUTH_URL` | Origem da aplicação: `http://localhost:3000` localmente; `https://www.maily.com.br` em produção. |
 | `NEXTAUTH_SECRET` | Segredo aleatório, distinto por ambiente. |
-| `NEXT_PUBLIC_SITE_URL` | Origem pública para canonical, sitemap e URLs dos ícones. Sem ela, robots bloqueia indexação. |
-| `BUSINESS_CONTACT_EMAIL` | Contato comercial usado no pedido de orçamento Business. |
+| `NEXT_PUBLIC_SITE_URL` | Origem pública para canonical, sitemap e recursos legados. Sem ela, robots bloqueia indexação. |
+| `BUSINESS_CONTACT_EMAIL` | Destinatário das solicitações Business enviadas pelo Resend. |
 
 ### Confirmação de e-mail — Resend
 
@@ -186,7 +186,7 @@ As migrations preservam registros existentes. Inclua a pasta `prisma/migrations`
 | Autenticação | NextAuth, senha com bcrypt e confirmação via Resend |
 | Persistência | Prisma e PostgreSQL; permissões conferidas no servidor |
 | Pagamentos | AbacatePay v2, conciliação de pedidos e eventos autenticados |
-| Exportação | PNG Free no servidor; HTML premium e PNG premium no navegador |
+| Exportação | PNG Free e HTML Free/Pro no servidor; PNG premium no navegador |
 | Imagens | Cloudinary para uploads e arquivos locais para ícones e mascote |
 
 ```text
@@ -210,11 +210,11 @@ Veja também [ARVORE.txt](ARVORE.txt).
 
 A prévia Free é pública e pode ser salva como qualquer imagem exibida no navegador. O botão de exportação do produto exige conta confirmada, salva a assinatura e registra a primeira exportação. A conta Free mantém uma assinatura; campos premium são descartados no servidor.
 
-O PNG Free é composto no servidor com `sharp`, fontes DejaVu e seus arquivos de licença em `assets/fonts`. O HTML premium usa tabelas e estilos inline; a exportação verifica novamente as permissões. Dados do usuário são escapados.
+O PNG Free é composto no servidor com `sharp`, fontes DejaVu e seus arquivos de licença em `assets/fonts`. O HTML Free/Pro usa tabelas e estilos inline; a exportação verifica novamente as permissões. Dados do usuário são escapados.
 
 O rascunho do editor fica no `sessionStorage`. Ao iniciar cadastro, uma cópia em `localStorage`, válida por uma hora, permite retomar o trabalho em outra aba. As cópias são removidas ao salvar ou sair; senhas não fazem parte do rascunho.
 
-Instagram, Facebook, LinkedIn, WhatsApp, YouTube, TikTok, X e GitHub aparecem quando preenchidos com URLs HTTPS válidas da rede. Os ícones ficam em `public/social`, com licença e atribuição Font Awesome Free. Para regenerar recursos locais:
+Instagram, Facebook, LinkedIn, WhatsApp, YouTube, TikTok, X e GitHub aparecem quando preenchidos com URLs HTTPS válidas da rede. Os arquivos legados em `public/social` mantêm licença e atribuição Font Awesome Free. Novas exportações usam links textuais para não depender dessas imagens. Para regenerar recursos locais:
 
 ```sh
 node scripts/generate-social-icons.mjs
@@ -231,7 +231,7 @@ node --import tsx examples/generate.ts
 | POST | /api/auth/verify-email | Consumir token de confirmação |
 | POST | /api/preview | Prévia Free pública em PNG |
 | POST | /api/signatures/preview | Prévia HTML premium autorizada |
-| POST | /api/signatures/export | PNG Free autenticado ou HTML premium |
+| POST | /api/signatures/export | PNG Free ou HTML Free/Pro autenticados |
 | GET, POST | /api/signatures | Listar ou criar assinaturas do usuário |
 | PATCH, DELETE | /api/signatures/:id | Editar ou excluir assinatura do usuário |
 | POST | /api/upload | Upload autenticado de imagem de até 3 MB |
@@ -275,3 +275,44 @@ O teste de integração de pagamentos é opcional e fica ignorado sem `PAYMENT_T
 - [AbacatePay: checkout transparente](https://docs.abacatepay.com/pages/transparents/reference)
 - [AbacatePay: cartão](https://docs.abacatepay.com/pages/transparents/card) e [script de tokenização](https://docs.abacatepay.com/pages/transparents/abacatepay-js)
 - [AbacatePay: segurança dos webhooks](https://docs.abacatepay.com/pages/webhooks/security) e [eventos](https://docs.abacatepay.com/pages/webhooks/events/transparent)
+
+
+## Assinaturas profissionais e compatibilidade
+
+Os 15 exemplos usam perfis fictícios por profissão. O editor aceita registro profissional
+(CRECI, OAB, CRM, CRC), CNPJ, endereço, aviso legal opcional e WhatsApp com código do país
+ou link oficial. Os campos novos têm valores padrão para preservar assinaturas antigas.
+Nenhum registro profissional ou CNPJ é autenticado pela aplicação.
+
+No Free, os dados profissionais e o WhatsApp aparecem no PNG como texto. No HTML,
+o domínio do site e os contatos são links. Redes sociais usam nomes em texto clicável,
+sem depender de SVG, base64 ou imagens no domínio Maily. Isso não corrige exportações
+já instaladas: é necessário exportar e instalar novamente a assinatura.
+
+Fotos enviadas são convertidas em PNG 256 × 256, com recorte central e máscara circular
+aplicados aos pixels. Logos são ajustados proporcionalmente em tela transparente.
+Imagens antigas devem ser reenviadas para receber esse tratamento. O limite é 3 MB;
+o processamento remove metadados e limita a decodificação a 25 milhões de pixels.
+Fotos e logos continuam no Cloudinary e podem ser bloqueados pelo cliente de e-mail.
+
+A exportação usa tabelas, estilos inline, fontes de sistema, dimensões de imagem e
+links textuais. Não depende de `object-fit` ou SVG embutido. Isso reduz diferenças,
+mas não garante aparência idêntica em Gmail, Outlook clássico, Apple Mail, modo escuro
+ou versões móveis. Valide um envio real nos clientes usados pela sua equipe.
+
+### Contato Business
+
+`POST /api/business` envia a solicitação pelo Resend, com `reply_to` apontando para o
+solicitante e destino fixo no servidor em `BUSINESS_CONTACT_EMAIL`. O endereço comercial
+confirmado é `ajuda@maily.com.br`; configure essa variável também na Vercel em Production.
+São necessários `RESEND_API_KEY`, `VERIFICATION_FROM_EMAIL` e PostgreSQL com as migrations.
+
+O endpoint valida origem, tamanho e campos; usa campo antispam e limite no banco
+(uma solicitação por minuto por IP/e-mail e 30 solicitações por hora no total).
+O controle temporário reutiliza `VerificationToken` com prefixo `business:` e expiração,
+sem mudar tokens de confirmação de contas. A interface só confirma sucesso quando
+Resend aceita o envio. Aceitação não comprova entrega na caixa postal: consulte os
+registros do Resend em caso de ausência. Testes automatizados simulam o provedor e
+não enviam mensagens reais.
+
+O primeiro HTML Free exportado também registra `firstFreeExportAt`, permitindo acompanhar a adoção do Free. Isso não representa analytics de cliques nas assinaturas.

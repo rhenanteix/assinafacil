@@ -12,20 +12,20 @@ import "@/styles/globals.css";
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslator();
   return {
-  metadataBase: publicSiteUrl(),
-  icons: {
-    icon: { url: "/mascote/boas-vindas.png", type: "image/png" },
-    apple: { url: "/mascote/boas-vindas.png", type: "image/png" },
-  },
-  title: { default: t("Maily | Assinaturas profissionais de e-mail"), template: "%s | Maily" },
-  description: t("Crie uma assinatura profissional de e-mail em minutos. Personalize templates e exporte em HTML ou PNG."),
-  openGraph: { title: "Maily", description: t("Crie sua assinatura profissional de e-mail com prévia ao vivo."), locale: (await getLocale()) === "en" ? "en_US" : "pt_BR", type: "website" },
-};
+    metadataBase: publicSiteUrl(),
+    icons: {
+      icon: { url: "/mascote/boas-vindas.png", type: "image/png" },
+      apple: { url: "/mascote/boas-vindas.png", type: "image/png" },
+    },
+    title: { default: t("Maily | Assinaturas profissionais de e-mail"), template: "%s | Maily" },
+    description: t("Crie uma assinatura profissional de e-mail em minutos. Personalize templates e exporte em HTML ou PNG."),
+    openGraph: { title: "Maily", description: t("Crie sua assinatura profissional de e-mail com prévia ao vivo."), locale: (await getLocale()) === "en" ? "en_US" : "pt_BR", type: "website" },
+  };
 }
 export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   const t = await getTranslator();
   const locale = await getLocale();
-  return <html lang={locale}><body className={GeistSans.className}><LocaleProvider locale={locale}>
+  return <html lang={locale} suppressHydrationWarning><body className={GeistSans.className} suppressHydrationWarning><LocaleProvider locale={locale}>
     <a href="#conteudo" className="sr-only focus:not-sr-only">{t("Ir para o conteúdo")}</a>
     <Header />
     <main id="conteudo">{children}</main>

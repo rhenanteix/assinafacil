@@ -1,7 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import sharp from "sharp";
-import { readFile } from "node:fs/promises";
 import { canUseTemplate, demo, signatureSchema, templates, toEssential } from "@/types/signature";
 import { prepareSignature } from "@/lib/signature/access";
 import { freeSignaturePng } from "@/lib/signature/free-png";
@@ -32,18 +31,19 @@ test("old records receive defaults for new social fields", () => {
   assert.equal(signatureSchema.safeParse({ ...demo, facebook: "https://facebook.com.attacker.test/profile" }).success, false);
 });
 
-test("only filled networks create linked PNG icons in premium HTML", async () => {
+test("social icons use linked PNGs with accessible labels and escaped input", async () => {
   const data = { ...demo, name: '<img src="x" onerror="alert(1)">', instagram: "https://instagram.com/example", facebook: "https://facebook.com/example", linkedin: "https://linkedin.com/in/example" };
-  const html = renderSignature(data, true);
+  const html = renderSignature(data, true, "pt-BR", "https://example.com");
   assert.match(html, /&lt;img/);
   assert.doesNotMatch(html, /<img src="x"/);
   for (const network of ["instagram", "facebook", "linkedin"]) {
-    assert.match(html, new RegExp("/social/" + network + "\\.png"));
-    const metadata = await sharp(await readFile(`public/social/${network}.png`)).metadata();
-    assert.equal(metadata.format, "png");
+    assert.match(html, new RegExp(network + "\\.com"));
+    assert.doesNotMatch(html, /<svg|data:image/);
+    assert.ok(html.includes(`https://example.com/social/${network}.png`));
   }
-  assert.doesNotMatch(html, /\/social\/youtube\.png/);
-  assert.doesNotMatch(renderSignature(data, false), /\/social\//);
+  assert.doesNotMatch(html, /youtube\.com\/example/);
+  assert.match(html, /alt="Facebook"/);
+  assert.doesNotMatch(renderSignature(data, false), /<svg/);
 });
 
 test("free preview produces real PNG and safely handles XML-like names", async () => {
@@ -56,8 +56,21 @@ test("free preview produces real PNG and safely handles XML-like names", async (
 
 
 test("Free PNG wraps long wide names instead of clipping", async () => {
-  const png = await freeSignaturePng({ ...demo, name: "W".repeat(100), role: "", company: "", phone: "", email: "" });
-  const metadata = await sharp(png).metadata();
+  const base = { ...toEssential(demo), role: "", company: "", phone: "", email: "", address: "", cnpj: "", professionalRegistrationType: undefined, professionalRegistration: "", legalNotice: "", whatsapp: "" };
+  const short = await sharp(await freeSignaturePng({ ...base, name: "Ana" })).metadata();
+  const metadata = await sharp(await freeSignaturePng({ ...base, name: "W".repeat(100) })).metadata();
   assert.equal(metadata.width, 920);
-  assert.ok((metadata.height ?? 0) > 400);
+  assert.ok((metadata.height ?? 0) > (short.height ?? 0) + 100);
+});
+
+
+test("Free HTML keeps contact links and branding without unlocking premium customization", () => {
+  const prepared = prepareSignature({ ...demo, template: "essential", phone: "+55 11 99999-0000", color: "#ff0000", logo: "https://res.cloudinary.com/example/logo.png" }, { pro: false, owned: [] });
+  assert.ok(prepared);
+  const html = renderSignature(prepared.data, prepared.premium);
+  assert.match(html, /mailto:/);
+  assert.match(html, /tel:/);
+  assert.match(html, /https:\/\/wa.me\//);
+  assert.match(html, /Criado com Maily/);
+  assert.doesNotMatch(html, /#ff0000|logo.png|instagram.com/);
 });

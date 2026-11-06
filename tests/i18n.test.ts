@@ -26,7 +26,7 @@ test("English exports translate built-in copy without changing personal details"
   assert.match(en, /Diretor/);
   assert.doesNotMatch(en, /CONTATO PROFISSIONAL|Criado com/);
   assert.match(renderSignature(data, false), /CONTATO PROFISSIONAL/);
-  assert.match(renderSignature({ ...demo, template: "sales" }, true, "en"), /Chat on WhatsApp/);
+  assert.match(renderSignature({ ...demo, template: "sales" }, false, "en"), /Chat on WhatsApp/);
 });
 test("localized pricing keeps the original BRL currency and amount", () => {
   assert.match(price(4990, "pt-BR"), /49,90/);

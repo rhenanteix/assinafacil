@@ -3,7 +3,7 @@ import { verifiedUserId } from "@/lib/auth";
 import { Offers, OfferButton } from "@/components/marketing/Offers";
 import { plans, price } from "@/lib/payments/plans";
 import { ModelGallery } from "@/components/marketing/PricingDetails";
-import { demo, templates } from "@/types/signature";
+import { demoDemos, templates, toEssential } from "@/types/signature";
 import { renderSignature } from "@/lib/utils/signature";
 
 export async function generateMetadata() {
@@ -17,7 +17,7 @@ export default async function Pricing() {
   const models = templates.map(model => ({
     id: model.id, label: t(model.label),
     tier: "exclusive" in model ? t("Exclusivo") : model.pro ? "Pro" : "Free",
-    html: renderSignature({ ...demo, role: t(demo.role), company: t(demo.company), template: model.id }, model.pro, locale),
+    html: renderSignature({ ...(model.pro ? demoDemos[model.id] : toEssential(demoDemos[model.id])), role: t(demoDemos[model.id].role), company: t(demoDemos[model.id].company), template: model.id }, model.pro, locale),
   }));
   const signedIn = Boolean(await verifiedUserId());
   return <div className="shell space-y-10 py-14">
@@ -43,8 +43,8 @@ export default async function Pricing() {
         <caption className="sr-only">{t("Comparação dos planos Free e Pro")}</caption>
         <thead className="bg-violet-50"><tr>{["Recurso", "Free", "Pro"].map(label => <th key={label} scope="col" className="p-4">{t(label)}</th>)}</tr></thead>
         <tbody>{[
-          ["Formato de entrega", "PNG", "HTML e PNG"],
-          ["Links clicáveis", "Não", "Sim, no HTML"],
+          ["Formato de entrega", "HTML e PNG", "HTML e PNG"],
+          ["Links clicáveis", "Sim, no HTML", "Sim, no HTML"],
           ["Marca d’água", "Sim, no Essencial Free", "Sem marca"],
           ["Assinaturas salvas", "1", "Ilimitadas"],
           ["Quantidade de modelos", "1 (Essencial)", "13 (Essencial + 12 Pro)"],
@@ -54,6 +54,7 @@ export default async function Pricing() {
     </section>
     <section aria-labelledby="faq-title" className="space-y-4">
       <h2 id="faq-title" className="text-2xl font-bold">{t("Perguntas frequentes")}</h2>
+      <details className="panel"><summary className="cursor-pointer font-semibold">{t("Como instalar o HTML?")}</summary><p className="mt-3 text-sm text-slate-700">{t("Clique em Copiar HTML e cole no campo de assinatura do seu e-mail. Se o navegador copiar apenas o código, salve-o como arquivo .html, abra no navegador e copie a assinatura exibida.")}</p></details>
       <details className="panel"><summary className="cursor-pointer font-semibold">{t("Como usar o PNG no Gmail e no Outlook?")}</summary>
         <div className="mt-4 grid gap-5 text-sm text-slate-700 sm:grid-cols-2">
           {[
@@ -63,7 +64,7 @@ export default async function Pricing() {
         </div>
       </details>
       <details className="panel"><summary className="cursor-pointer font-semibold">{t("Funciona no Gmail, Outlook e Apple Mail?")}</summary><p className="mt-3 text-sm text-slate-700">{t("Os formatos PNG e HTML podem ser usados nesses clientes. A instalação e a aparência variam por versão; aplicativos móveis podem limitar imagens e HTML. Faça um envio de teste antes de usar e lembre que o destinatário pode bloquear imagens externas.")}</p></details>
-      <details className="panel"><summary className="cursor-pointer font-semibold">{t("Qual a diferença entre PNG e HTML?")}</summary><p className="mt-3 text-sm text-slate-700">{t("PNG é uma imagem: mantém o visual, mas seus contatos e ícones não têm links individuais clicáveis. HTML organiza texto, foto e ícones com links; a aparência pode variar conforme o cliente de e-mail. No Pro, você pode exportar nos dois formatos.")}</p></details>
+      <details className="panel"><summary className="cursor-pointer font-semibold">{t("Qual a diferença entre PNG e HTML?")}</summary><p className="mt-3 text-sm text-slate-700">{t("HTML mantém os contatos clicáveis. PNG é uma imagem sem links individuais. Os dois formatos estão disponíveis no Free e no Pro.")}</p></details>
     </section>
   </div>;
 }

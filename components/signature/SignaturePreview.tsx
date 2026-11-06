@@ -14,7 +14,7 @@ export function SignaturePreview({ data, premium, capture }: {
   const [preview, setPreview] = useState<{ url?: string; html?: string; request: string } | null>(null);
   const [error, setError] = useState("");
   // Preview can show partially filled contacts while the complete form remains validated on export.
-  const basic = { name: data.name || t("Seu nome"), role: data.role, company: data.company, phone: data.phone, email: data.email };
+  const basic = { address: data.address, cnpj: data.cnpj, professionalRegistrationType: data.professionalRegistrationType, professionalRegistration: data.professionalRegistration, legalNotice: data.legalNotice, whatsapp: data.whatsapp, name: data.name || t("Seu nome"), role: data.role, company: data.company, phone: data.phone, email: data.email };
   if (!basicSignatureSchema.shape.email.safeParse(basic.email).success) basic.email = "";
   if (!basicSignatureSchema.shape.phone.safeParse(basic.phone).success) basic.phone = "";
   const parsed = signatureSchema.safeParse({ ...data, ...basic });
