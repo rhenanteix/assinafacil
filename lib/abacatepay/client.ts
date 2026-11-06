@@ -1,9 +1,22 @@
 import { z } from "zod";
 
 export class PaymentApiError extends Error {
-  constructor(public readonly status: number, public readonly definiteRejection: boolean) {
+  constructor(public readonly status: number, public readonly definiteRejection: boolean, public readonly reason = "provider_error") {
     super(`AbacatePay HTTP ${status}`);
   }
+}
+export function paymentErrorReason(status: number, error: unknown) {
+  const message = typeof error === "string" ? error
+    : error && typeof error === "object" && "message" in error && typeof error.message === "string" ? error.message : "";
+  // Only fixed categories leave this function; never log the raw provider response.
+  if (/not available|not enabled|disabled|não habilitad/i.test(message)) return "method_not_enabled";
+  if (/permission|scope|TRANSPARENT:CREATE/i.test(message)) return "missing_permission";
+  if (status === 401 || /invalid.*key|invalid.*token|unauthorized/i.test(message)) return "invalid_credentials";
+  if (/verif|kyc|onboarding/i.test(message)) return "store_verification_required";
+  if (status === 403) return "access_denied";
+  if (status === 400 || status === 422) return "invalid_request";
+  if (status === 429) return "rate_limited";
+  return "provider_error";
 }
 export async function abacatePay(path: string, payload?: object): Promise<unknown> {
   const token = process.env.ABACATEPAY_API_KEY;
@@ -17,7 +30,7 @@ export async function abacatePay(path: string, payload?: object): Promise<unknow
   const result = await response.json().catch(() => null);
   if (!response.ok || !result?.data || result.error || !result.success) {
     // A timeout/5xx may hide an accepted charge. Never retry creation automatically.
-    throw new PaymentApiError(response.status, [400, 401, 403, 404, 422].includes(response.status));
+    throw new PaymentApiError(response.status, [400, 401, 403, 404, 422].includes(response.status), paymentErrorReason(response.status, result?.error));
   }
   return result.data;
 }

@@ -47,7 +47,8 @@ export async function POST(request: Request) {
   try {
     const charge = chargeSchema.parse(await abacatePay("/transparents/create", {
       method, data: {
-        amount: order.cents, description: `Maily · ${plans[plan].label}`,
+        // AbacatePay rejects the middle-dot separator (U+00B7).
+        amount: order.cents, description: `Maily - ${plans[plan].label}`,
         metadata: { orderId: order.id },
         ...(method === "PIX" ? { expiresIn: 1800 } : {}),
         ...(customer ? { customer: { ...customer, email: account.email } } : {}),
@@ -63,7 +64,10 @@ export async function POST(request: Request) {
     await db.order.updateMany({ where: { id: order.id, status: "creating", paymentId: null }, data: { status: rejected ? "failed" : "uncertain" } });
     // Preserve the order for status checks; a webhook can recover an ambiguous response.
     const current = await db.order.findUniqueOrThrow({ where: { id: order.id } });
-    console.error("abacatepay.checkout", { orderId: order.id, status: error instanceof PaymentApiError ? error.status : "uncertain" });
+    console.error("abacatepay.checkout", { orderId: order.id, method,
+      status: error instanceof PaymentApiError ? error.status : "uncertain",
+      reason: error instanceof PaymentApiError ? error.reason : "response_validation_or_network",
+    });
     return Response.json({ order: orderView(current) }, { headers: { "Cache-Control": "no-store" } });
   }
 }
