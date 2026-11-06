@@ -25,11 +25,7 @@ export default async function Pricing() {
       <p className="mt-3 text-slate-600">{t("Comece grátis, desbloqueie o Pro com pagamento único ou personalize a assinatura da empresa inteira.")}</p></div>
     <Offers signedIn={signedIn} />
     {/* TODO [CONFIRMAR]: formas de pagamento aceitas, garantia/reembolso e emissão de nota fiscal. */}
-    <aside aria-label={t("Informações de compra")} className="panel grid gap-4 text-sm sm:grid-cols-3">
-      <p>{t("Formas de pagamento: a confirmar")}</p>
-      <p>{t("Garantia e reembolso: a confirmar")}</p>
-      <p>{t("Emissão de nota fiscal: a confirmar")}</p>
-    </aside>
+
     <ModelGallery models={models} />
     <section id="exclusivos"><h2 className="text-2xl font-bold">{t("Modelos exclusivos")}</h2>
       <p className="mb-5 mt-2 text-slate-600">{t("Comprou um modelo exclusivo no plano Free? Você exporta esse modelo sem marca, mas continua com 1 assinatura salva. Com o Pro, as assinaturas salvas são ilimitadas.")}</p>

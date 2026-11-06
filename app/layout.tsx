@@ -5,7 +5,7 @@ import Link from "next/link";
 import { publicSiteUrl } from "@/lib/utils/site-url";
 import type { Metadata } from "next";
 import { GeistSans } from "geist/font/sans";
-import { Toaster } from "sonner";
+import { MailyToaster } from "@/components/shared/MailyToaster";
 import { Header } from "@/components/layout/Header";
 import "@/styles/globals.css";
 
@@ -33,6 +33,6 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
       <Link href="/" aria-label={t("Página inicial — Maily")}><Image src="/mascote/logo.png" alt="Maily" width={2172} height={724} sizes="144px" className="h-auto w-36" /></Link>
       <p>{t("Assinaturas profissionais de e-mail")}</p>
     </footer>
-    <Toaster richColors position="bottom-right" />
+    <MailyToaster />
   </LocaleProvider></body></html>;
 }

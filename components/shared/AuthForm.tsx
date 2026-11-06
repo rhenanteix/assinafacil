@@ -24,6 +24,7 @@ export function AuthForm({ register = false, google, destination }: { register?:
           const { verificationSent } = await jsonRequest<{ verificationSent: boolean }>("/api/register", {
             method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...values, destination }),
           });
+          if (verificationSent) toast.success(t("Conta criada com sucesso."));
           if (!verificationSent) toast.info(t("Conta criada. Use a opção de enviar um novo link para confirmar o e-mail."));
         }
         const result = await signIn("credentials", { ...values, redirect: false });
@@ -31,6 +32,7 @@ export function AuthForm({ register = false, google, destination }: { register?:
           if (register) { router.replace("/login" + suffix); return; }
           throw new Error(t("Confira seu e-mail e sua senha."));
         }
+        if (!register) toast.success(t("Você entrou com sucesso."));
         router.replace("/verificar-email" + suffix);
         router.refresh();
       });

@@ -29,3 +29,41 @@
 @media (prefers-reduced-motion: reduce) {
   .af-float { animation: none; }
 }
+
+.maily-loading { background: radial-gradient(ellipse at center, #ede9fe80, transparent 65%); }
+.maily-loading-cat { animation: maily-bob 2.8s ease-in-out infinite; }
+.maily-loading-mail { animation: maily-bob 2.8s ease-in-out -.7s infinite; }
+.maily-loading-orbit { animation: maily-orbit 18s linear infinite; }
+.maily-loading-dots span { width: 7px; height: 7px; border-radius: 50%; background: #8060d5; animation: maily-dot 1.4s ease-in-out infinite; }
+.maily-loading-dots span:nth-child(2) { animation-delay: .18s; }
+.maily-loading-dots span:nth-child(3) { animation-delay: .36s; }
+@keyframes maily-bob { 50% { transform: translateY(-10px) rotate(-3deg); } }
+@keyframes maily-orbit { to { transform: rotate(360deg); } }
+@keyframes maily-dot { 50% { transform: translateY(-5px); opacity: .4; } }
+
+[data-sonner-toast].maily-toast {
+  padding: 18px 44px 18px 18px;
+  gap: 14px;
+  border: 1px solid #ddd5f5;
+  border-radius: 20px;
+  background: linear-gradient(115deg, #f5f1ff, #fff 70%);
+  color: #30234a;
+  box-shadow: 0 12px 40px -12px #4c327b30;
+  font-family: inherit;
+}
+[data-sonner-toast].maily-toast [data-icon] { width: 48px; height: 48px; margin: 0; flex-shrink: 0; }
+.maily-toast-mascot { position: relative; display: block; width: 48px; height: 48px; }
+.maily-toast-badge { position: absolute; right: -2px; bottom: 0; display: grid; place-items: center; width: 21px; height: 21px; border: 2px solid white; border-radius: 50%; color: white; }
+.maily-toast-badge-success { background: #047857; }
+.maily-toast-badge-error { background: #be123c; }
+.maily-toast-badge-info { background: #7350bb; }
+.maily-toast-badge-warning { background: #a16207; }
+[data-sonner-toast].maily-toast[data-type="success"] { border-color: #b8e2d2; }
+[data-sonner-toast].maily-toast[data-type="error"] { border-color: #f0bdcd; }
+[data-sonner-toast].maily-toast [data-title] { font-size: 14px; line-height: 1.5; font-weight: 600; overflow-wrap: anywhere; }
+[data-sonner-toast].maily-toast [data-close-button] { left: auto; right: 8px; top: 8px; transform: none; width: 28px; height: 28px; border: none; background: transparent; color: #6d5b88; }
+[data-sonner-toast].maily-toast [data-close-button]:hover { background: #ede9fe; }
+@media (prefers-reduced-motion: reduce) {
+  .maily-loading-cat, .maily-loading-mail, .maily-loading-orbit, .maily-loading-dots span { animation: none; }
+  [data-sonner-toast].maily-toast { transition: none; }
+}

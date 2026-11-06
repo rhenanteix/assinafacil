@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Script from "next/script";
+import { toast } from "sonner";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useLocale, useTranslation } from "@/lib/i18n/client";
@@ -22,7 +23,6 @@ export function TransparentCheckout({ plan, cents, email, publicKey, devMode, in
   const [order, setOrder] = useState(initial);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
-  const [notice, setNotice] = useState("");
   const [scriptReady, setScriptReady] = useState(false);
   const [cardReady, setCardReady] = useState(false);
   const [cardError, setCardError] = useState(false);
@@ -72,8 +72,8 @@ export function TransparentCheckout({ plan, cents, email, publicKey, devMode, in
   }, [order?.id, pending]);
 
   async function copy(value: string) {
-    try { await navigator.clipboard.writeText(value); setNotice("Código copiado."); }
-    catch { setNotice("Selecione o código e copie manualmente."); }
+    try { await navigator.clipboard.writeText(value); toast.success(t("Código copiado.")); }
+    catch { toast.error(t("Selecione o código e copie manualmente.")); }
   }
   async function submit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -95,7 +95,9 @@ export function TransparentCheckout({ plan, cents, email, publicKey, devMode, in
       setOrder(result.order);
       router.replace(`/checkout?plan=${plan}&order=${result.order.id}`, { scroll: false });
     } catch (failure) {
-      setError(failure instanceof Error ? failure.message : "Não foi possível iniciar o pagamento.");
+      const message = failure instanceof Error ? failure.message : "Não foi possível iniciar o pagamento.";
+      setError(message);
+      toast.error(t(message));
     } finally { setBusy(false); submitting.current = false; }
   }
   const payment = order?.paymentData;
@@ -151,7 +153,6 @@ export function TransparentCheckout({ plan, cents, email, publicKey, devMode, in
       </Button>
     </form>}
     {error && <p role="alert" className="text-sm text-red-700">{t(error)}</p>}
-    {notice && <p role="status" className="text-sm">{t(notice)}</p>}
     <p className="text-xs text-slate-500">{t("Pagamento processado com segurança pelo AbacatePay. Valores em reais (BRL).")}</p>
   </section>;
 }

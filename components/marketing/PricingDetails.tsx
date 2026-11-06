@@ -1,6 +1,8 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useId, useRef, useState } from "react";
+import { toast } from "sonner";
+import { MailyToaster } from "@/components/shared/MailyToaster";
 import { useTranslation } from "@/lib/i18n/client";
 import { Button } from "@/components/ui/button";
 
@@ -24,11 +26,11 @@ export function ModelGallery({ models }: { models: { id: string; label: string; 
 export function BusinessContact({ enabled }: { enabled: boolean }) {
   const t = useTranslation();
   const dialog = useRef<HTMLDialogElement>(null);
-  const [status, setStatus] = useState("");
+  const toasterId = useId();
   const [busy, setBusy] = useState(false);
   const sending = useRef(false);
   return <>
-    <Button variant="outline" onClick={() => { setStatus(""); dialog.current?.showModal(); }}>{t("Falar com a equipe")}</Button>
+    <Button variant="outline" onClick={() => { dialog.current?.showModal(); }}>{t("Falar com a equipe")}</Button>
     <dialog ref={dialog} aria-labelledby="business-title" className="w-[calc(100%-2rem)] max-w-lg rounded-2xl p-6 backdrop:bg-slate-950/60">
       <div className="mb-5 flex items-center justify-between gap-3"><h2 id="business-title" className="text-xl font-bold">{t("Falar com a equipe")}</h2><button type="button" className="underline" onClick={() => dialog.current?.close()}>{t("Fechar")}</button></div>
       <form className="space-y-4" onSubmit={async event => {
@@ -37,16 +39,16 @@ export function BusinessContact({ enabled }: { enabled: boolean }) {
         const form = event.currentTarget;
         sending.current = true;
         setBusy(true);
-        setStatus("");
         try {
           const data = Object.fromEntries(new FormData(form));
           const response = await fetch("/api/business", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(data), signal: AbortSignal.timeout(30000) });
           const result = await response.json().catch(() => null);
           if (!response.ok) throw new Error(result?.error ?? "Não foi possível enviar. Tente novamente mais tarde.");
-          setStatus(t("Solicitação enviada para a equipe. Responderemos pelo e-mail informado."));
           form.reset();
+          dialog.current?.close();
+          toast.success(t("Solicitação enviada para a equipe. Responderemos pelo e-mail informado."));
         } catch (error) {
-          setStatus(t(error instanceof Error && error.name !== "TimeoutError" ? error.message : "Não foi possível confirmar o envio. Aguarde antes de tentar novamente."));
+          toast.error(t(error instanceof Error && error.name !== "TimeoutError" ? error.message : "Não foi possível confirmar o envio. Aguarde antes de tentar novamente."), { toasterId });
         } finally { sending.current = false; setBusy(false); }
 
       }}>
@@ -55,8 +57,9 @@ export function BusinessContact({ enabled }: { enabled: boolean }) {
         <input name="website" tabIndex={-1} autoComplete="off" aria-hidden="true" className="hidden" />
         {!enabled && <p className="text-sm text-slate-600">{t("Contato comercial a confirmar. Nenhuma mensagem foi enviada.")}</p>}
         <Button type="submit" disabled={!enabled || busy}>{busy ? t("Enviando…") : t("Enviar solicitação")}</Button>
-        <p role="status" className="text-sm text-slate-700">{status}</p>
       </form>
+      {/* Keep errors in the modal top layer, where they remain visible and dismissible. */}
+      <MailyToaster id={toasterId} />
     </dialog>
   </>;
 }
