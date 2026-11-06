@@ -1,108 +1,225 @@
-# AssinaFácil
+<p align="center">
+  <img src="mascote/Friendly%20Cat%20Mascot%20with%20Envelope-1.png" width="200" alt="Mascote do Maily, um gato com um envelope" />
+</p>
 
-Aplicação full-stack com 15 modelos. O Essencial Free mostra uma prévia PNG pública, tem layout e cor fixos e aceita somente nome, cargo, empresa, telefone e e-mail. Para salvar e gerar o download, o usuário confirma o e-mail. A exportação Free é um PNG rasterizado no servidor com marca AssinaFácil. O Pro libera os 12 modelos padrão adicionais, HTML, cores, foto, logo e redes sociais. Os dois modelos exclusivos são vendidos individualmente.
+<h1 align="center">Maily</h1>
 
+<p align="center">
+  Assinaturas de e-mail com a sua identidade.<br />
+  Crie, personalize e exporte sua assinatura em português ou inglês.
+</p>
+
+<p align="center">
+  <a href="https://www.maily.com.br">Site</a> ·
+  <a href="#rodar-localmente">Instalação</a> ·
+  <a href="#configuração">Configuração</a> ·
+  <a href="#publicar-em-produção">Deploy</a> ·
+  <a href="#verificações">Verificações</a>
+</p>
+
+## O projeto
+
+O Maily é uma aplicação de criação de assinaturas de e-mail, com editor visual, prévia, conta de usuário e checkout integrado. São 15 modelos: um gratuito, 12 modelos adicionais do Pro e dois exclusivos vendidos separadamente.
+
+O projeto nasceu como **AssinaFácil**. Esse nome ainda aparece no nome do pacote, em identificadores internos e em alguns recursos legados do repositório.
+
+### O que você pode fazer
+
+- Experimentar o modelo gratuito antes de criar uma conta.
+- Salvar assinaturas e exportá-las depois de confirmar o e-mail.
+- Personalizar modelos premium com cores, foto, logo e redes sociais.
+- Exportar PNG ou HTML, conforme o acesso adquirido.
+- Comprar pelo checkout transparente AbacatePay, com Pix e boleto; cartão depende de habilitação na conta e chave pública.
+- Alternar entre **português do Brasil e inglês**, preservando os dados do editor. Os preços permanecem em reais.
+
+### Planos e modelos
+
+| Opção | O que inclui | Preço |
+| --- | --- | --- |
+| Essencial Free | Uma assinatura com layout e cor fixos; nome, cargo, empresa, telefone e e-mail; exportação PNG com marca | Gratuito |
+| Pro | 12 modelos padrão adicionais, personalização, imagens, redes sociais e exportação HTML/PNG | R$ 49,90, pagamento único |
+| Signature Luxe | Modelo exclusivo, adquirido individualmente | R$ 24,90 |
+| Brand Desk | Modelo exclusivo, adquirido individualmente | R$ 24,90 |
+| Business | Serviço para equipes, sob orçamento e com entrega manual | Sob consulta |
+
+Os valores são definidos no servidor em [lib/payments/plans.ts](lib/payments/plans.ts). Os planos mensal e anual permanecem no código para atender compras antigas.
+
+## Como funciona
+
+<p align="center">
+  <img src="mascote/Violet-eyed%20cat%20mascot%20behind%20a%20laptop-2.png" width="220" alt="Mascote do Maily trabalhando em um notebook" />
+</p>
+
+1. A pessoa abre o gerador e preenche os dados da assinatura.
+2. Cria uma conta e confirma o e-mail para salvar e exportar.
+3. Usa o Essencial ou adquire acesso aos modelos premium.
+4. Exporta a assinatura e a configura no cliente de e-mail.
+
+O HTML usa tabelas e estilos inline. O PNG é uma imagem e **não preserva links clicáveis**. Clientes de e-mail podem bloquear imagens externas; por isso, os ícones e imagens precisam de URLs públicas acessíveis.
 
 ## Rodar localmente
 
-Requisitos: Node.js 22+, npm e PostgreSQL (local, remoto ou via Docker Compose).
+**Requisitos:** Node.js 22 ou superior, npm e PostgreSQL. Docker Compose é opcional para iniciar o banco local.
 
 ```sh
+npm ci
 cp .env.example .env
 openssl rand -base64 32
+```
+
+Coloque o segredo gerado em `NEXTAUTH_SECRET` e confira `DATABASE_URL` no `.env`. Não use o valor de exemplo como segredo real. Para usar o banco fornecido pelo projeto:
+
+```sh
 docker compose up -d --wait
-npm ci
 npm run db:migrate
 npm run dev
 ```
 
-Insira a saída do OpenSSL em `NEXTAUTH_SECRET` antes de iniciar. Abra http://localhost:3000. Use o PostgreSQL do Compose ou ajuste `DATABASE_URL` para sua instância. Se o Docker não oferecer `--wait`, aguarde o PostgreSQL aceitar conexões antes de migrar.
+Abra **http://localhost:3000**. Se sua versão do Docker não aceitar `--wait`, aguarde o PostgreSQL iniciar antes de executar as migrations. Se usar outro banco, configure a conexão e pule o comando do Docker.
 
-Rotas de interface: `/`, `/gerador`, `/precos`, `/login`, `/cadastro`, `/verificar-email`, `/dashboard`, `/checkout`.
+Credenciais locais podem ficar em `.env.local`, ignorado pelo Git. O Next.js carrega esse arquivo, mas o comando Prisma de migrations usa `.env` ou as variáveis do processo: confira a conexão antes de migrar para não atualizar outro banco.
 
-## Integrações e ambiente
+Para concluir cadastro, confirmação e compra, configure também o Resend e o AbacatePay. Sem essas integrações, iniciar a aplicação não valida o fluxo completo.
 
-| Variável | Configuração |
+## Configuração
+
+Use [.env.example](.env.example) como referência. **Nunca publique arquivos `.env` ou chaves privadas.** Em produção, configure as variáveis no provedor de hospedagem; elas não são enviadas junto com o código.
+
+### Aplicação e banco
+
+| Variável | Uso |
 | --- | --- |
-| DATABASE_URL | PostgreSQL. Use conexão que permita migrations para `npm run db:migrate`. |
-| NEXTAUTH_URL | Origem canônica. Exemplo local `http://localhost:3000`. Para checkout, use HTTPS público. |
-| NEXTAUTH_SECRET | Segredo aleatório e distinto por ambiente. |
-| GOOGLE_CLIENT_ID / GOOGLE_CLIENT_SECRET | Cliente OAuth Web. Autorize `<origem>/api/auth/callback/google`. Sem ambos, apenas e-mail e senha ficam disponíveis. O NextAuth mantém o método original se o mesmo e-mail já existir. |
-| CLOUDINARY_URL | Credencial da conta no formato `cloudinary://API_KEY:API_SECRET@CLOUD_NAME`. Os arquivos enviados são públicos para exibição em clientes de e-mail. |
-| MP_ACCESS_TOKEN | Access Token da aplicação Checkout Pro. |
-| MP_WEBHOOK_SECRET | Assinatura secreta da configuração Webhooks do Mercado Pago. |
-| NEXT_PUBLIC_SITE_URL | Origem HTTPS oficial para canonical, robots e sitemap. Sem configuração, robots bloqueia indexação do ambiente. |
-| BUSINESS_CONTACT_EMAIL | E-mail comercial para pedidos de orçamento Business. O CTA abre um e-mail preenchido. |
-| RESEND_API_KEY | Chave do Resend para envio dos links de confirmação de cadastro. |
-| VERIFICATION_FROM_EMAIL | Remetente de um domínio verificado no Resend. Exemplo `AssinaFácil <acesso@seu-dominio.com.br>`. |
-| MP_SANDBOX | Use `true` para sandbox e `false` em produção. |
+| `DATABASE_URL` | Conexão PostgreSQL. A conexão usada nas migrations precisa permitir alterações no schema. |
+| `NEXTAUTH_URL` | Origem da aplicação: `http://localhost:3000` localmente; `https://www.maily.com.br` em produção. |
+| `NEXTAUTH_SECRET` | Segredo aleatório, distinto por ambiente. |
+| `NEXT_PUBLIC_SITE_URL` | Origem pública para canonical, sitemap e URLs dos ícones. Sem ela, robots bloqueia indexação. |
+| `BUSINESS_CONTACT_EMAIL` | Contato comercial usado no pedido de orçamento Business. |
 
-### Pagamentos — AbacatePay v2
+### Confirmação de e-mail — Resend
 
-O checkout transparente fica em `/checkout?plan=lifetime` (Pro) ou usa `signature-luxe` / `brand-desk`. Pix e boleto ficam no próprio site. Cartão usa o iframe oficial `https://abacatepay.com/abacatepay.js`, somente quando existe a chave pública `pk_...` e a conta tem cartão transparente habilitado. Dados do cartão não passam pelo app. Valores continuam em BRL: Pro R$ 49,90; exclusivos R$ 24,90.
+| Variável | Uso |
+| --- | --- |
+| `RESEND_API_KEY` | Chave com permissão de envio para o domínio configurado. |
+| `VERIFICATION_FROM_EMAIL` | Remetente de domínio verificado, por exemplo `Maily <acesso@maily.com.br>`. |
 
-Configuração por ambiente:
+Verifique o domínio no painel do Resend antes de usar o remetente. Uma caixa Gmail não substitui essa verificação. A origem de `NEXTAUTH_URL` determina o endereço do link enviado: em produção ela não pode apontar para localhost.
 
-- `ABACATEPAY_API_KEY`: chave v2 privada com `TRANSPARENT:CREATE` e `TRANSPARENT:READ`.
-- `ABACATEPAY_PUBLIC_KEY`: chave pública `pk_...` do mesmo ambiente; opcional para Pix/boleto.
-- `ABACATEPAY_WEBHOOK_SECRET`: segredo aleatório privado, compartilhado com o webhook.
-- `ABACATEPAY_ENVIRONMENT`: `test` ou `production`, consistente com a chave. Use bancos separados. Pagamentos de teste não liberam acesso em produção.
-- `NEXTAUTH_URL` e `NEXT_PUBLIC_SITE_URL`: `https://www.maily.com.br` em produção.
-- `NEXTAUTH_SECRET` e um método de confirmação de conta funcional: Resend (`RESEND_API_KEY`, `VERIFICATION_FROM_EMAIL`) ou Google OAuth.
+O link expira em 24 horas, e apenas seu hash é armazenado. A confirmação exige uma ação na página para evitar consumo por pré-carregamento de e-mail. Há intervalo de um minuto entre pedidos de reenvio. Se o envio falhar, a conta continua criada e pode solicitar outro link depois do login. Em timeout, o token permanece válido caso a mensagem chegue posteriormente.
 
-Execute `npm run db:migrate` **antes** de publicar. A migration adiciona campos ao pedido e uma tabela de eventos; preserva as compras antigas. Configure o webhook HTTPS final em `https://www.maily.com.br/api/payments/abacatepay/webhook` para `transparent.completed`, `transparent.refunded`, `transparent.disputed`, `transparent.lost`. O secret é configurado no cadastro do webhook; a AbacatePay o adiciona à query string automaticamente.
+Google OAuth é opcional: configure `GOOGLE_CLIENT_ID` e `GOOGLE_CLIENT_SECRET`, com callback `<origem>/api/auth/callback/google`. Sem ambos, o app usa e-mail e senha. O login Google exige e-mail confirmado pelo provedor.
 
-`npm run payments:webhook` cadastra o endpoint definido em `NEXTAUTH_URL`; exige também `WEBHOOK:CREATE` e `WEBHOOK:READ`. O script não duplica endpoints existentes. Confirme o secret e os eventos no painel se o endpoint já existir.
+### Imagens — Cloudinary
 
-O servidor fixa preços e vincula cada cobrança ao pedido e ao usuário. Há bloqueio transacional por usuário, chave de tentativa e reaproveitamento de pedidos pendentes. Em timeout/erro ambíguo, o pedido fica `uncertain`: nunca há retentativa automática de cobrança. O webhook pode recuperar a cobrança pelo `metadata.orderId`. Para reconciliação operacional após confirmar o ID no painel, use `npm run payments:reconcile -- <orderId> <paymentId>`; a ferramenta confere vínculo, valor e ambiente antes de alterar o pedido.
+Configure `CLOUDINARY_URL` no formato `cloudinary://API_KEY:API_SECRET@CLOUD_NAME` para uploads. Os arquivos são públicos para que possam ser exibidos nos clientes de e-mail. O endpoint aceita imagens de até 3 MB.
 
-Webhooks verificam secret privado e HMAC do corpo original, consultam a cobrança atual na API, conferem valor/ambiente/vínculo e registram o ID do evento em transação. Repetições e eventos atrasados não duplicam acesso nem desfazem reembolsos. Disputas suspendem acesso; a resolução favorável mais recente pode restabelecê-lo. A consulta autenticada de status limita leituras ao provedor a uma por dez segundos por pedido. Tokens reutilizáveis de cartão e documentos do pagador não são persistidos ou devolvidos ao navegador.
+### Checkout — AbacatePay v2
 
-O endpoint legado `/api/payments/webhook` continua atendendo exclusivamente pedidos Mercado Pago. Mantenha suas credenciais antigas enquanto houver pagamentos que possam receber notificações. Novas compras usam apenas AbacatePay.
+| Variável | Uso |
+| --- | --- |
+| `ABACATEPAY_API_KEY` | Chave privada v2 com permissões `TRANSPARENT:CREATE` e `TRANSPARENT:READ`. |
+| `ABACATEPAY_ENVIRONMENT` | `test` ou `production`, consistente com a chave. |
+| `ABACATEPAY_WEBHOOK_SECRET` | Segredo privado compartilhado com o webhook. |
+| `ABACATEPAY_PUBLIC_KEY` | Chave pública `pk_…` do mesmo ambiente, necessária apenas para cartão. |
 
-Documentação utilizada: [checkout transparente](https://docs.abacatepay.com/pages/transparents/reference), [cartão](https://docs.abacatepay.com/pages/transparents/card), [script do cartão](https://docs.abacatepay.com/pages/transparents/abacatepay-js), [segurança dos webhooks](https://docs.abacatepay.com/pages/webhooks/security), [eventos](https://docs.abacatepay.com/pages/webhooks/events/transparent).
+Use bancos e credenciais separados para teste e produção. Pagamentos de teste não liberam acesso em produção. O checkout exige conta com e-mail confirmado.
 
-### Business
+Rotas de compra: `/checkout?plan=lifetime`, `/checkout?plan=signature-luxe` e `/checkout?plan=brand-desk`. O cartão só aparece quando a chave pública está configurada; a conta AbacatePay também precisa ter checkout transparente com cartão habilitado. A tokenização usa o iframe oficial, sem enviar dados brutos de cartão ao app.
 
-Serviço sob orçamento com entrega manual. O site apresenta o processo de briefing, aprovação de piloto e produção em lote. Configure o contato comercial para habilitar a solicitação.
+#### Webhook
 
-### Vercel
+Endpoint de produção:
 
-Importe a raiz do projeto com o preset Next.js e Node.js 22 ou superior. Configure as variáveis no painel, com uma origem canônica e um PostgreSQL para cada ambiente. Execute `npm ci` e `npm run db:migrate` em CI ou em uma sessão autorizada antes do deploy. O build utiliza `npm run build`. Atualize os callbacks de Google e Mercado Pago com a URL pública do ambiente.
+```text
+https://www.maily.com.br/api/payments/abacatepay/webhook
+```
 
-## Cadastro e confirmação
+Inscreva os eventos `transparent.completed`, `transparent.refunded`, `transparent.disputed` e `transparent.lost`. Configure o segredo no cadastro do webhook; o provedor o envia na query string.
 
-O cadastro por senha cria a conta e solicita um link de confirmação com validade de 24 horas, enviado pelo Resend. O banco guarda o hash do token. A confirmação consome o token em transação, e novos envios ficam limitados a um por minuto por conta. O link abre uma página com botão para confirmar, evitando o consumo por pré-carregamento de e-mail. Se o envio estiver indisponível, a conta continua criada e o usuário pode entrar e pedir outro link. Configure Resend e o remetente para concluir o fluxo por senha.
+Com o endpoint publicado e as variáveis do ambiente de destino carregadas:
 
-O login Google exige o e-mail confirmado pelo provedor. Contas antigas por senha também precisam confirmar o e-mail. As permissões são lidas do banco a cada operação de gravação ou exportação. O rascunho fica no `sessionStorage` da mesma aba. Ao iniciar o cadastro, uma cópia em `localStorage` com validade de uma hora permite retomar os dados se a confirmação abrir em outra aba. Ambas são removidas após salvar ou sair da conta. Dados de senha nunca fazem parte do rascunho.
+```sh
+npm run payments:webhook
+```
 
-## Free, premium e exportação
+O script usa `NEXTAUTH_URL`, exige HTTPS público e permissões `WEBHOOK:CREATE` e `WEBHOOK:READ`. Não duplica um endpoint existente; nesse caso, confira seu segredo e suas inscrições no painel.
 
-- O Essencial usa `sharp` no servidor para compor o PNG com texto quebrado automaticamente e uma moldura fixa. As fontes DejaVu e suas licenças estão incluídas em `assets/fonts` e no tracing de funções da Vercel. Os dados do usuário são escapados, e a prévia recebe apenas bytes PNG.
-- A prévia Free é pública para a pessoa experimentar. Como qualquer imagem exibida na web, ela pode ser salva ou capturada pelo navegador. O botão de download do produto exige cadastro confirmado, salva a assinatura e registra a primeira exportação na conta.
-- O endpoint de exportação HTML exige uma sessão verificada e um modelo desbloqueado. Ocultar o botão na interface é acompanhado pela checagem no servidor.
-- Cores, imagens e links enviados por uma conta Free são descartados antes da persistência do Essencial. O bloqueio transacional mantém o limite de uma assinatura mesmo com requisições simultâneas.
-- O HTML premium usa tabelas e estilos inline. Os ícones são imagens PNG com links absolutos e nomes acessíveis. O PNG premium é rasterizado no navegador após nova validação da permissão. O PNG não mantém links clicáveis.
-- Os campos sociais têm valores padrão para ler registros anteriores à inclusão das novas redes.
-- Depois da expiração de um Pro antigo, a conta pode visualizar os dados na versão Essencial e escolher se deseja salvar essa substituição.
+#### Consistência dos pagamentos
 
-## Redes sociais
+Os preços vêm do servidor. Cada cobrança é vinculada ao usuário e ao pedido; tentativas repetidas reutilizam pedidos pendentes. O webhook valida segredo e HMAC, consulta o estado atual da cobrança e confere valor, ambiente e vínculo antes de liberar acesso. Eventos são registrados em transação para lidar com repetições.
 
-Instagram, Facebook, LinkedIn, WhatsApp, YouTube, TikTok, X e GitHub aparecem somente quando preenchidos com links HTTPS da rede correspondente. Os PNGs locais ficam em `public/social`, com licença e atribuição Font Awesome Free incluídas. Configure `NEXT_PUBLIC_SITE_URL` com a origem pública antes de gerar assinaturas reais, para que os ícones sejam carregados pelos clientes de e-mail. Eles podem bloquear imagens externas conforme as configurações de privacidade.
+Reembolsos e disputas atualizam o acesso. Um erro de rede ambíguo mantém o pedido como `uncertain`, sem criar automaticamente uma nova cobrança. Após confirmar o identificador no painel, reconcilie com:
 
-Regenerar os ícones e exemplos locais:
+```sh
+npm run payments:reconcile -- <orderId> <paymentId>
+```
+
+O comando confere vínculo, valor e ambiente antes de alterar o pedido. Execute-o com a conexão e as credenciais do ambiente correspondente.
+
+O endpoint legado `/api/payments/webhook` atende pedidos Mercado Pago. Preserve `MP_ACCESS_TOKEN`, `MP_WEBHOOK_SECRET` e a configuração `MP_SANDBOX` enquanto houver compras antigas que possam receber notificações. Novas compras usam AbacatePay.
+
+## Publicar em produção
+
+<p align="center">
+  <img src="mascote/Joyful%20leaping%20cat%20delivering%20an%20envelope-3.png" width="200" alt="Mascote do Maily entregando um envelope" />
+</p>
+
+Na Vercel, importe a raiz do projeto com preset **Next.js**, Node.js 22+ e comando de build `npm run build`.
+
+1. Configure as variáveis no ambiente **Production**, incluindo Resend, AbacatePay e banco.
+2. Defina `NEXTAUTH_URL` e `NEXT_PUBLIC_SITE_URL` como `https://www.maily.com.br`.
+3. Execute `npm run db:migrate` com `DATABASE_URL` apontando para o **banco de produção**. O build não aplica migrations automaticamente.
+4. Publique o código e confira se o domínio atende a nova versão.
+5. Cadastre ou confira o webhook AbacatePay para o domínio final.
+6. Valide cadastro, recebimento do e-mail, confirmação, login e exportação Free.
+7. Valide o pagamento e a liberação do acesso, incluindo recebimento do webhook.
+
+**Build aprovado não significa integração validada em produção.** Chave aceita pela API não comprova criação de cobrança, entrega de e-mail ou processamento de webhook. A habilitação de cartão também depende do provedor.
+
+As migrations preservam registros existentes. Inclua a pasta `prisma/migrations` no deploy; aplicar uma migration no banco local não atualiza o banco de produção.
+
+## Arquitetura
+
+| Camada | Tecnologias e responsabilidade |
+| --- | --- |
+| Interface | Next.js 15 App Router, React 19, TypeScript e Tailwind CSS |
+| Editor | React Hook Form, Zod e Framer Motion |
+| Autenticação | NextAuth, senha com bcrypt e confirmação via Resend |
+| Persistência | Prisma e PostgreSQL; permissões conferidas no servidor |
+| Pagamentos | AbacatePay v2, conciliação de pedidos e eventos autenticados |
+| Exportação | PNG Free no servidor; HTML premium e PNG premium no navegador |
+| Imagens | Cloudinary para uploads e arquivos locais para ícones e mascote |
+
+```text
+app/                 Páginas e Route Handlers
+components/          Editor, autenticação, checkout e interface
+lib/auth/            Fluxos de conta e confirmação
+lib/i18n/            Traduções, locale e providers
+lib/abacatepay/       Cliente e segurança do provedor
+lib/payments/        Planos, validação e estados de pagamento
+lib/prisma/          Banco e regras de acesso
+prisma/              Schema e migrations
+scripts/             Configuração e reconciliação operacional
+public/mascote/      Imagens usadas pela aplicação
+mascote/             Artes do mascote usadas neste README
+tests/               Testes de exportação, tradução e pagamentos
+```
+
+Veja também [ARVORE.txt](ARVORE.txt).
+
+### Regras de acesso e exportação
+
+A prévia Free é pública e pode ser salva como qualquer imagem exibida no navegador. O botão de exportação do produto exige conta confirmada, salva a assinatura e registra a primeira exportação. A conta Free mantém uma assinatura; campos premium são descartados no servidor.
+
+O PNG Free é composto no servidor com `sharp`, fontes DejaVu e seus arquivos de licença em `assets/fonts`. O HTML premium usa tabelas e estilos inline; a exportação verifica novamente as permissões. Dados do usuário são escapados.
+
+O rascunho do editor fica no `sessionStorage`. Ao iniciar cadastro, uma cópia em `localStorage`, válida por uma hora, permite retomar o trabalho em outra aba. As cópias são removidas ao salvar ou sair; senhas não fazem parte do rascunho.
+
+Instagram, Facebook, LinkedIn, WhatsApp, YouTube, TikTok, X e GitHub aparecem quando preenchidos com URLs HTTPS válidas da rede. Os ícones ficam em `public/social`, com licença e atribuição Font Awesome Free. Para regenerar recursos locais:
 
 ```sh
 node scripts/generate-social-icons.mjs
 node --import tsx examples/generate.ts
 ```
-
-## Arquitetura
-
-- App Router e Server Components para páginas e leitura inicial. React Hook Form, Zod e Framer Motion no editor.
-- Route Handlers, NextAuth, Prisma e PostgreSQL para conta, permissões, persistência e compras. Mutações validam origem e autorização no servidor.
-- `User.createdAt` registra novos cadastros. `emailVerified` identifica confirmação, `firstFreeExportAt` registra a primeira exportação Free e `Order` registra o pagamento e a aprovação. Contas anteriores à migração mantêm data de cadastro desconhecida em `createdAt`.
-- Execute as migrations em ambientes já existentes. O SQL adicional usa `ALTER TABLE` e preserva os registros.
 
 ### API
 
@@ -123,10 +240,6 @@ node --import tsx examples/generate.ts
 | POST | /api/payments/abacatepay/webhook | Validar e reconciliar eventos AbacatePay |
 | POST | /api/payments/webhook | Processar evento assinado do Mercado Pago |
 
-## Árvore completa
-
-Veja [ARVORE.txt](ARVORE.txt).
-
 ## Verificações
 
 ```sh
@@ -135,3 +248,30 @@ npm run typecheck
 npm test
 npm run build
 ```
+
+Para executar apenas os testes de pagamento e tradução:
+
+```sh
+node --import tsx --test tests/payments.test.ts tests/i18n.test.ts
+```
+
+O teste de integração de pagamentos é opcional e fica ignorado sem `PAYMENT_TEST_DATABASE_URL`. Ele exige um banco descartável chamado `payment_test`, em `127.0.0.1:55432`, com as migrations aplicadas. Usa PostgreSQL real e respostas simuladas do provedor; não efetua cobranças reais. Nunca aponte testes para o banco de produção.
+
+## Problemas comuns
+
+| Sintoma | O que verificar |
+| --- | --- |
+| `Order.devMode does not exist` | Aplique `npm run db:migrate` no mesmo banco usado pelo app. |
+| Confirmação retorna 503 | Confira Resend, domínio, remetente e os logs `[verification]` no servidor. Reinicie o servidor local após alterar variáveis. |
+| Link de confirmação aponta para localhost | Corrija `NEXTAUTH_URL` no ambiente que envia o e-mail. |
+| Checkout indisponível | Confira chave privada, segredo do webhook e ambiente explícito `test` ou `production`. |
+| Cartão não aparece | Configure a chave pública `pk_…` e confirme a habilitação na conta AbacatePay. |
+| Pagamento sem acesso liberado | Confira pedido, ambiente, webhook e logs; use reconciliação após identificar a cobrança. |
+| Ícones não aparecem no e-mail | Confira `NEXT_PUBLIC_SITE_URL` e bloqueio de imagens externas no cliente. |
+
+## Referências
+
+- [Resend: domínio verificado](https://resend.com/docs/dashboard/domains/introduction)
+- [AbacatePay: checkout transparente](https://docs.abacatepay.com/pages/transparents/reference)
+- [AbacatePay: cartão](https://docs.abacatepay.com/pages/transparents/card) e [script de tokenização](https://docs.abacatepay.com/pages/transparents/abacatepay-js)
+- [AbacatePay: segurança dos webhooks](https://docs.abacatepay.com/pages/webhooks/security) e [eventos](https://docs.abacatepay.com/pages/webhooks/events/transparent)
