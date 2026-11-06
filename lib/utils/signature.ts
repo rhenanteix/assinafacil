@@ -16,7 +16,8 @@ export function renderSignature(data: SignatureData, pro: boolean, locale: Local
   const linear = (n: number) => n / 255 <= .04045 ? n / 255 / 12.92 : ((n / 255 + .055) / 1.055) ** 2.4;
   const onTheme = .2126 * linear(r) + .7152 * linear(g) + .0722 * linear(b) > .179 ? "#111111" : "#ffffff";
   const name = escape(data.name.trim() || t("Seu nome"));
-  const subtitle = [data.role, data.company].filter(Boolean).map(escape).join(" · ");
+  const roleLine = data.role ? escape(data.role) : "";
+  const companyLine = data.company ? escape(data.company) : "";
   const picture = (url: string, alt: string, size: number, radius: string) => safeUrl(url) ?
     `<img src="${safeUrl(url)}" alt="${alt}" width="${size}" height="${size}" style="display:block;width:${size}px;height:${size}px;object-fit:${radius === "50%" ? "cover" : "contain"};border-radius:${radius};border:0">` : "";
   const compact = data.template === "compact";
@@ -24,20 +25,21 @@ export function renderSignature(data: SignatureData, pro: boolean, locale: Local
   const initials = escape(data.name.trim().split(/\s+/).slice(0, 2).map(word => [...word][0] ?? "").join("").toUpperCase() || "AF");
   const logo = picture(data.logo, t("Logo da empresa"), 36, "4px");
   const badge = `<span style="display:inline-block;text-align:center;width:64px;line-height:64px;border-radius:50%;color:${onTheme};background:${theme};font-size:20px;font-weight:bold">${initials}</span>`;
-  const contact = (href: string, label: string) => href ? `<a href="${href}" style="color:#344054;text-decoration:underline">${escape(label)}</a>` : "";
+  const contact = (href: string, label: string) => href ? `<a href="${href}" style="color:#344054;text-decoration:none">${escape(label)}</a>` : "";
   const phone = data.phone.replace(/[^\d+]/g, "").replace(/(?!^)\+/g, "");
   const items = [
     contact(phone ? "tel:" + phone : "", data.phone),
     contact(/^\S+@\S+\.\S+$/.test(data.email) ? "mailto:" + escape(encodeURIComponent(data.email).replace(/%40/g,"@")) : "", data.email),
-    contact(safeUrl(data.website), t("Site")),
+    contact(safeUrl(data.website), data.website ? (escape(data.website.replace(/^https?:\/\//, "").replace(/\/$/, ""))) : t("Site")),
   ].filter(Boolean);
   const social = pro ? renderSocialIcons(data) : "";
   const accent = data.template === "color" || data.template === "studio";
   const executive = data.template === "executive";
   const studio = data.template === "studio";
   const details = `<div style="font-weight:bold;font-size:${compact ? 16 : 22}px;line-height:1.2;overflow-wrap:anywhere">${name}</div>
-    ${subtitle ? `<div style="font-size:13px;margin-top:5px;overflow-wrap:anywhere">${subtitle}</div>` : ""}
-    ${items.length ? `<div style="margin-top:10px;line-height:1.7;font-size:12px;overflow-wrap:anywhere">${items.join(compact ? " · " : "<br>")}</div>` : ""}`;
+    ${roleLine ? `<div style="font-size:13px;margin-top:5px;overflow-wrap:anywhere">${roleLine}</div>` : ""}
+    ${companyLine ? `<div style="font-size:12px;margin-top:2px;color:#475569;overflow-wrap:anywhere">${companyLine}</div>` : ""}
+    ${items.length ? `<div style="margin-top:10px;line-height:1.7;font-size:12px;overflow-wrap:anywhere">${items.join(compact ? " | " : "<br>")}</div>` : ""}`;
   const editorial = data.template === "editorial";
   const luxe = data.template === "signature-luxe";
   const brandDesk = data.template === "brand-desk";

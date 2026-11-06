@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { socialNetworks } from "./social";
 
+// TODO: [CONFIRMAR] manter total de 12 modelos Pro ou ampliar com Horizontal/Compacto
 export const templates = [
   { id: "minimal", label: "Minimalista", pro: true },
   { id: "essential", label: "Essencial", pro: false },
