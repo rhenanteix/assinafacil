@@ -1,9 +1,14 @@
 import type { Prisma } from "@prisma/client";
 import { db } from ".";
 
+// Test payments must never grant production access. This guard is independent
+// of ABACATEPAY_ENVIRONMENT so a typo cannot silently turn test charges into
+// real access.
+const isTestEnvironment = process.env.ABACATEPAY_ENVIRONMENT === "test";
+const allowedDevMode = process.env.VERCEL_ENV === "production" ? false : isTestEnvironment;
 export async function signatureAccess(userId: string, client: Prisma.TransactionClient = db) {
   const orders = await client.order.findMany({
-    where: { userId, status: "approved", devMode: process.env.ABACATEPAY_ENVIRONMENT === "test", OR: [{ plan: { in: ["lifetime", "signature-luxe", "brand-desk"] } }, { expiresAt: { gt: new Date() } }] },
+    where: { userId, status: "approved", devMode: allowedDevMode, OR: [{ plan: { in: ["lifetime", "signature-luxe", "brand-desk"] } }, { expiresAt: { gt: new Date() } }] },
     select: { plan: true },
   });
   const owned = orders.map(order => order.plan).filter(plan => plan === "signature-luxe" || plan === "brand-desk");

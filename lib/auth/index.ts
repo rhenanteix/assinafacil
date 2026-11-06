@@ -25,8 +25,12 @@ export const authOptions: NextAuthOptions = {
         const parsed = credentialsSchema.safeParse(raw);
         if (!parsed.success) return null;
         const user = await db.user.findUnique({ where: { email: parsed.data.email } });
-        const valid = await compare(parsed.data.password, user?.passwordHash ?? "$2b$12$R9h/cIPz0gi.URNNX3kh2OPST9/PgBkqquzi.Ss7KIUgO2t0jWMUW");
-        return valid && user?.passwordHash ? { id: user.id, email: user.email, name: user.name } : null;
+        // Never run bcrypt against a hardcoded fallback hash. If the user does
+        // not exist, return immediately so an attacker cannot measure timing or
+        // burn CPU probing for registered addresses.
+        if (!user?.passwordHash) return null;
+        const valid = await compare(parsed.data.password, user.passwordHash);
+        return valid ? { id: user.id, email: user.email, name: user.name } : null;
       },
     }),
   ],

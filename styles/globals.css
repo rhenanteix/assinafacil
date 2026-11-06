@@ -67,3 +67,28 @@
   .maily-loading-cat, .maily-loading-mail, .maily-loading-orbit, .maily-loading-dots span { animation: none; }
   [data-sonner-toast].maily-toast { transition: none; }
 }
+
+/* NotFound animations */
+@keyframes nf-float {
+  0%, 100% { transform: translateY(0); }
+  25% { transform: translateY(-12px); }
+  50% { transform: translateY(8px); }
+  75% { transform: translateY(-6px); }
+}
+.animate-float { animation: nf-float 5s ease-in-out infinite; }
+
+@keyframes nf-bounce-in {
+  0% { transform: scale(0) rotate(-180deg); opacity: 0; }
+  100% { transform: scale(1) rotate(0deg); opacity: 1; }
+}
+.animate-bounce-in { animation: nf-bounce-in 0.5s ease-out forwards; }
+
+@keyframes nf-fade-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-fade-in { animation: nf-fade-in 0.6s ease-out forwards; opacity: 0; }
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-float, .animate-bounce-in, .animate-fade-in { animation: none; opacity: 1; }
+}
