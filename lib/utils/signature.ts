@@ -46,7 +46,7 @@ export function renderSignature(data: SignatureData, pro: boolean, locale: Local
   const monogram = data.template === "monogram";
   const side = data.template === "modern" || executive || monogram || luxe ? photo || badge : photo;
   const banner = data.template === "banner" || brandDesk ? `<tr><td colspan="3" style="background:${theme};color:${onTheme};padding:8px 12px;font-weight:bold">${escape(data.company || t("Vamos conversar?"))}</td></tr>` : "";
-  const watermark = pro ? "" : `<tr><td colspan="3" style="padding:7px 12px;font-size:10px;color:#526078">${t("Criado com AssinaFácil")}</td></tr>`;
+  const watermark = pro ? "" : `<tr><td colspan="3" style="padding:7px 12px;font-size:10px;color:#526078">${t("Criado com Maily")}</td></tr>`;
   const rule = data.template === "classic" || data.template === "executive" || consulting || luxe ? `border-top:3px solid ${theme};` : "";
   const border = data.template === "minimal" || data.template === "modern" ? `border-left:3px solid ${theme};` : "";
   return `<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="border-collapse:separate;max-width:100%;font-family:${editorial || luxe ? "Georgia,serif" : "Arial,sans-serif"};font-size:13px;background:${luxe ? "#fff8eb" : studio ? "#f4f2ff" : brandDesk ? "#f1f5f9" : "#ffffff"};color:#182139;${rule}${border}"><tbody>

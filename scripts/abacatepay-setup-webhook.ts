@@ -16,7 +16,7 @@ async function main() {
     console.log("Webhook already exists for this endpoint. Verify its secret and four event subscriptions in the dashboard.");
     return;
   }
-  await abacatePay("/webhooks/create", { name: `AssinaFacil ${process.env.ABACATEPAY_ENVIRONMENT}`, endpoint: endpoint.href, secret, events });
+  await abacatePay("/webhooks/create", { name: `Maily ${process.env.ABACATEPAY_ENVIRONMENT}`, endpoint: endpoint.href, secret, events });
   console.log(`Webhook registered: ${endpoint.origin}${endpoint.pathname}`);
 }
 main().catch(error => { console.error(error instanceof Error ? error.message : "Webhook setup failed"); process.exitCode = 1; });

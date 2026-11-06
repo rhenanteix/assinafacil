@@ -138,7 +138,7 @@ export function SignatureBuilder({ initial = emptySignature, pro = false, signed
           toast.success(t("Assinatura salva."));
         })}><Save size={16} />{busy === "save" ? t("Salvando…") : t("Salvar assinatura")}</Button>
       </div>
-      <p className="text-xs leading-relaxed text-slate-600">{premium ? t("Cole o HTML nas configurações do e-mail para manter os links clicáveis. O PNG é uma imagem.") : t("O Essencial tem layout e cor fixos. O PNG inclui a marca AssinaFácil e os contatos aparecem como texto na imagem.")}</p>
+      <p className="text-xs leading-relaxed text-slate-600">{premium ? t("Cole o HTML nas configurações do e-mail para manter os links clicáveis. O PNG é uma imagem.") : t("O Essencial tem layout e cor fixos. O PNG inclui a marca Maily e os contatos aparecem como texto na imagem.")}</p>
       {signedIn && <Link href="/dashboard" className="block text-sm text-brand underline">{t("Abrir minhas assinaturas")}</Link>}
     </section>
   </form>;

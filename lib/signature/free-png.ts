@@ -21,7 +21,7 @@ export async function freeSignaturePng(data: z.infer<typeof basicSignatureSchema
     { text: data.company, color: "#344054", font: "DejaVu Sans 30", gap: 10 },
     { text: data.phone, color: "#344054", font: "DejaVu Sans 28", gap: 10 },
     { text: data.email, color: "#344054", font: "DejaVu Sans 28", gap: 28 },
-    { text: t("Criado com AssinaFácil"), color: "#526078", font: "DejaVu Sans 22", gap: 12 },
+    { text: t("Criado com Maily"), color: "#526078", font: "DejaVu Sans 22", gap: 12 },
   ].filter(line => line.text);
   const rendered = await Promise.all(lines.map(async line => {
     const result = await sharp({

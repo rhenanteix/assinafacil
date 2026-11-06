@@ -14,7 +14,7 @@ import { demo, templates } from "@/types/signature";
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslator();
   return {
-    title: { absolute: t("Gerador de assinatura de e-mail profissional | AssinaFácil") },
+    title: { absolute: t("Gerador de assinatura de e-mail profissional | Maily") },
     description: t("Crie uma assinatura de e-mail profissional com logo, foto e contatos. Teste grátis, exporte em HTML ou PNG e padronize as assinaturas da sua empresa."),
     alternates: { canonical: publicSiteUrl()?.href },
   };
@@ -77,7 +77,7 @@ export default async function Home() {
     </Reveal></section>
     <section className="shell py-16"><h2 className="text-3xl font-bold tracking-tight">{t("Perguntas frequentes")}</h2><div className="mt-5 grid gap-3">
       {[
-        [t("Qual modelo é grátis?"), t("O Essencial é grátis. Tem layout e cor fixos, campos de nome, cargo, empresa, telefone e e-mail. Confirme seu cadastro para salvar uma assinatura e baixar o PNG com a marca AssinaFácil.")],
+        [t("Qual modelo é grátis?"), t("O Essencial é grátis. Tem layout e cor fixos, campos de nome, cargo, empresa, telefone e e-mail. Confirme seu cadastro para salvar uma assinatura e baixar o PNG com a marca Maily.")],
         [t("O Pro tem mensalidade?"), t("O Pro tem pagamento único e acesso sem expiração aos modelos incluídos no plano. Os modelos exclusivos são vendidos individualmente.")],
         [t("Qual é a diferença entre HTML e PNG?"), t("O HTML permite manter links clicáveis em clientes compatíveis. O PNG é uma imagem e pode ser inserido onde o cliente de e-mail aceitar imagens.")],
         [t("Como funciona o Business?"), t("O orçamento depende do tamanho do lote e da personalização. A empresa aprova um modelo piloto antes da produção das assinaturas.")],

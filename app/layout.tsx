@@ -17,9 +17,9 @@ export async function generateMetadata(): Promise<Metadata> {
     icon: { url: "/mascote/boas-vindas.png", type: "image/png" },
     apple: { url: "/mascote/boas-vindas.png", type: "image/png" },
   },
-  title: { default: t("AssinaFácil | Assinaturas profissionais de e-mail"), template: "%s | AssinaFácil" },
+  title: { default: t("Maily | Assinaturas profissionais de e-mail"), template: "%s | Maily" },
   description: t("Crie uma assinatura profissional de e-mail em minutos. Personalize templates e exporte em HTML ou PNG."),
-  openGraph: { title: "AssinaFácil", description: t("Crie sua assinatura profissional de e-mail com prévia ao vivo."), locale: (await getLocale()) === "en" ? "en_US" : "pt_BR", type: "website" },
+  openGraph: { title: "Maily", description: t("Crie sua assinatura profissional de e-mail com prévia ao vivo."), locale: (await getLocale()) === "en" ? "en_US" : "pt_BR", type: "website" },
 };
 }
 export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
@@ -30,7 +30,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
     <Header />
     <main id="conteudo">{children}</main>
     <footer className="shell mt-16 flex flex-col items-start justify-between gap-5 border-t border-indigo-100 py-8 text-sm text-slate-600 sm:flex-row sm:items-center">
-      <Link href="/" aria-label={t("Página inicial — AssinaFácil")}><Image src="/mascote/logo.png" alt="maily" width={2172} height={724} sizes="144px" className="h-auto w-36" /></Link>
+      <Link href="/" aria-label={t("Página inicial — Maily")}><Image src="/mascote/logo.png" alt="Maily" width={2172} height={724} sizes="144px" className="h-auto w-36" /></Link>
       <p>{t("Assinaturas profissionais de e-mail")}</p>
     </footer>
     <Toaster richColors position="bottom-right" />

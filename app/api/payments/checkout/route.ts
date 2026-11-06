@@ -47,7 +47,7 @@ export async function POST(request: Request) {
   try {
     const charge = chargeSchema.parse(await abacatePay("/transparents/create", {
       method, data: {
-        amount: order.cents, description: `AssinaFácil · ${plans[plan].label}`,
+        amount: order.cents, description: `Maily · ${plans[plan].label}`,
         metadata: { orderId: order.id },
         ...(method === "PIX" ? { expiresIn: 1800 } : {}),
         ...(customer ? { customer: { ...customer, email: account.email } } : {}),

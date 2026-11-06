@@ -21,7 +21,7 @@ test("English exports translate built-in copy without changing personal details"
   const data = { ...demo, name: "João", role: "Diretor", template: "consulting" as const };
   const en = renderSignature(data, false, "en");
   assert.match(en, /PROFESSIONAL CONTACT/);
-  assert.match(en, /Created with AssinaFácil/);
+  assert.match(en, /Created with Maily/);
   assert.match(en, /João/);
   assert.match(en, /Diretor/);
   assert.doesNotMatch(en, /CONTATO PROFISSIONAL|Criado com/);
