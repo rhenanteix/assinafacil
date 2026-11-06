@@ -1,6 +1,7 @@
 "use client";
 
 import { useId, useRef, useState } from "react";
+import posthog from "posthog-js";
 import { toast } from "sonner";
 import { MailyToaster } from "@/components/shared/MailyToaster";
 import { useTranslation } from "@/lib/i18n/client";
@@ -44,6 +45,7 @@ export function BusinessContact({ enabled }: { enabled: boolean }) {
           const response = await fetch("/api/business", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(data), signal: AbortSignal.timeout(30000) });
           const result = await response.json().catch(() => null);
           if (!response.ok) throw new Error(result?.error ?? "Não foi possível enviar. Tente novamente mais tarde.");
+          posthog.capture("business_contact_requested");
           form.reset();
           dialog.current?.close();
           toast.success(t("Solicitação enviada para a equipe. Responderemos pelo e-mail informado."));

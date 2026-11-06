@@ -1,6 +1,7 @@
 import { tokenHash } from "@/lib/auth/verification";
 import { db } from "@/lib/prisma";
 import { lockUser } from "@/lib/prisma/signatures";
+import { captureServerEvent } from "@/lib/posthog-server";
 import { failure, sameOrigin } from "@/lib/utils/http";
 
 export async function POST(request: Request) {
@@ -19,5 +20,7 @@ export async function POST(request: Request) {
     await tx.verificationToken.deleteMany({ where: { identifier: found.identifier } });
     return true;
   });
-  return verified ? Response.json({ ok: true }) : failure("Link inválido ou expirado. Solicite outro.", 400);
+  if (!verified) return failure("Link inválido ou expirado. Solicite outro.", 400);
+  await captureServerEvent({ distinctId: id, event: "email_verified" });
+  return Response.json({ ok: true });
 }
