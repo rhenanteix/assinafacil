@@ -2,7 +2,9 @@ import { OTLPLogExporter } from "@opentelemetry/exporter-logs-otlp-http";
 import { resourceFromAttributes } from "@opentelemetry/resources";
 import { BatchLogRecordProcessor, LoggerProvider } from "@opentelemetry/sdk-logs";
 
-const key = process.env.NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN;
+const key =
+  process.env.NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN ??
+  process.env.NEXT_PUBLIC_POSTHOG_KEY;
 const host = process.env.NEXT_PUBLIC_POSTHOG_HOST;
 
 if ((!key || !host) && process.env.NODE_ENV === "development") {

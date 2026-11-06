@@ -8,6 +8,7 @@ import { GeistSans } from "geist/font/sans";
 import { MailyToaster } from "@/components/shared/MailyToaster";
 import { Header } from "@/components/layout/Header";
 import { PostHogIdentity } from "@/components/shared/DashboardActions";
+import { PostHogProvider } from "@/components/shared/PostHogProvider";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import "@/styles/globals.css";
@@ -29,15 +30,19 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
   const t = await getTranslator();
   const locale = await getLocale();
   const session = await getServerSession(authOptions);
-  return <html lang={locale} suppressHydrationWarning><body className={GeistSans.className} suppressHydrationWarning><LocaleProvider locale={locale}>
-    {session?.user?.id && <PostHogIdentity userId={session.user.id} email={session.user.email} name={session.user.name} />}
-    <a href="#conteudo" className="sr-only focus:not-sr-only">{t("Ir para o conteúdo")}</a>
-    <Header />
-    <main id="conteudo">{children}</main>
-    <footer className="shell mt-16 flex flex-col items-start justify-between gap-5 border-t border-indigo-100 py-8 text-sm text-slate-600 sm:flex-row sm:items-center">
-      <Link href="/" aria-label={t("Página inicial — Maily")}><Image src="/mascote/logo.png" alt="Maily" width={2172} height={724} sizes="144px" className="h-auto w-36" /></Link>
-      <p>{t("Assinaturas profissionais de e-mail")}</p>
-    </footer>
-    <MailyToaster />
-  </LocaleProvider></body></html>;
+  return <html lang={locale} suppressHydrationWarning><body className={GeistSans.className} suppressHydrationWarning>
+    <PostHogProvider>
+      <LocaleProvider locale={locale}>
+        {session?.user?.id && <PostHogIdentity userId={session.user.id} email={session.user.email} name={session.user.name} />}
+        <a href="#conteudo" className="sr-only focus:not-sr-only">{t("Ir para o conteúdo")}</a>
+        <Header />
+        <main id="conteudo">{children}</main>
+        <footer className="shell mt-16 flex flex-col items-start justify-between gap-5 border-t border-indigo-100 py-8 text-sm text-slate-600 sm:flex-row sm:items-center">
+          <Link href="/" aria-label={t("Página inicial — Maily")}><Image src="/mascote/logo.png" alt="Maily" width={2172} height={724} sizes="144px" className="h-auto w-36" /></Link>
+          <p>{t("Assinaturas profissionais de e-mail")}</p>
+        </footer>
+        <MailyToaster />
+      </LocaleProvider>
+    </PostHogProvider>
+  </body></html>;
 }

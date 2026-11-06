@@ -1,0 +1,38 @@
+"use client";
+
+import posthog from "posthog-js";
+
+let initialized = false;
+
+export function initPostHog() {
+  if (initialized || typeof window === "undefined") return;
+
+  const posthogKey =
+    process.env.NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN ??
+    process.env.NEXT_PUBLIC_POSTHOG_KEY;
+  const posthogHost = process.env.NEXT_PUBLIC_POSTHOG_HOST;
+
+  if (!posthogKey || !posthogHost) {
+    if (process.env.NODE_ENV === "development") {
+      const missingVariable = !posthogKey
+        ? "NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN"
+        : "NEXT_PUBLIC_POSTHOG_HOST";
+      console.error(
+        `${missingVariable} variable required by PostHog is missing or un-configured, this causes events to be silently missed.`,
+      );
+    }
+    return;
+  }
+
+  posthog.init(posthogKey, {
+    api_host: posthogHost,
+    defaults: "2026-08-30",
+    capture_pageview: "history_change",
+    capture_pageleave: true,
+    capture_exceptions: true,
+    debug: process.env.NODE_ENV === "development",
+  });
+  initialized = true;
+}
+
+export { posthog };

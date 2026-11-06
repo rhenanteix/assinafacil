@@ -11,7 +11,9 @@ let client: PostHog | null | undefined;
 function getPostHogClient() {
   if (client !== undefined) return client;
 
-  const key = process.env.NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN;
+  const key =
+    process.env.NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN ??
+    process.env.NEXT_PUBLIC_POSTHOG_KEY;
   const host = process.env.NEXT_PUBLIC_POSTHOG_HOST;
   if (!key || !host) {
     if (process.env.NODE_ENV === "development") {
