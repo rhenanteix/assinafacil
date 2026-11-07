@@ -92,3 +92,24 @@
 @media (prefers-reduced-motion: reduce) {
   .animate-float, .animate-bounce-in, .animate-fade-in { animation: none; opacity: 1; }
 }
+
+/* One choreographed scene; replay is explicit and reduced motion stays still. */
+.nf-scene { position: relative; height: 340px; width: 100%; isolation: isolate; overflow: hidden; }
+.nf-halo { position: absolute; inset: 15% 10% 5%; background: radial-gradient(ellipse, #e8defa 0%, #f1ecfa 45%, transparent 70%); z-index: -1; }
+.nf-number { position: absolute; top: 0; left: 0; right: 0; color: #e4ddf3; font-size: clamp(110px, 27vw, 190px); font-weight: 800; letter-spacing: -.08em; line-height: 1.2; z-index: -1; }
+.nf-shelf { position: absolute; left: 15%; top: 245px; width: 56%; height: 12px; border-radius: 8px; background: #c6b8df; box-shadow: 0 8px 0 #e5ddef; }
+.nf-cat { position: absolute; width: 178px; height: 198px; object-fit: contain; left: calc(50% - 150px); top: 50px; transform-origin: 50% 95%; animation: nf-nudge 5s ease-in-out both; }
+.nf-paw { position: absolute; left: calc(50% - 16px); top: 146px; height: 24px; width: 42px; border-radius: 50%; background: #28272d; transform-origin: left center; animation: nf-pat 5s ease-in-out both; }
+.nf-plant { position: absolute; top: 98px; left: calc(50% + 32px); width: 100px; transform-origin: 85% 98%; animation: nf-fall 5s both; }
+.nf-plant svg { display: block; width: 100%; }
+.nf-oops { position: absolute; top: 65px; left: 59%; padding: 8px 14px; border: 1px solid #ddd1f3; border-radius: 15px 15px 15px 0; background: white; color: #6944a8; font-size: 14px; font-weight: 600; animation: nf-reaction 5s both; }
+.nf-dust { position: absolute; top: 305px; left: 65%; width: 80px; height: 14px; border-radius: 50%; background: #bfa9a0; filter: blur(5px); animation: nf-dust 5s both; }
+.nf-soil { position: absolute; top: 304px; left: 72%; width: 9px; height: 6px; border-radius: 50%; background: #785548; animation: nf-soil 5s both; }
+.nf-soil-two { left: 64%; top: 314px; width: 6px; }
+@keyframes nf-nudge { 0%, 15% { transform: rotate(0); } 30%, 40% { transform: translateX(14px) rotate(7deg); } 55%, 100% { transform: translateX(-5px) rotate(-5deg); } }
+@keyframes nf-pat { 0%, 18% { transform: scaleX(.3); opacity: 0; } 28%, 38% { transform: translateX(16px) rotate(-15deg); opacity: 1; } 48%, 100% { transform: scaleX(.2); opacity: 0; } }
+@keyframes nf-fall { 0%, 27% { transform: rotate(0); } 34% { transform: rotate(15deg); } 39% { transform: rotate(-8deg); } 45% { transform: rotate(22deg); } 58% { transform: translate(22px, 61px) rotate(77deg); animation-timing-function: ease-out; } 64% { transform: translate(20px, 50px) rotate(65deg); } 72%, 100% { transform: translate(22px, 61px) rotate(77deg); } }
+@keyframes nf-reaction { 0%, 49% { opacity: 0; transform: scale(.7); } 58%, 100% { opacity: 1; transform: scale(1); } }
+@keyframes nf-dust { 0%, 56% { opacity: 0; transform: scale(.3); } 65% { opacity: .45; transform: scale(1.3); } 85%, 100% { opacity: 0; transform: scale(1.7); } }
+@keyframes nf-soil { 0%, 57% { opacity: 0; transform: translateY(-12px); } 72%, 100% { opacity: 1; transform: translateY(0); } }
+@media (prefers-reduced-motion: reduce) { .nf-scene * { animation: none !important; } .nf-paw, .nf-dust, .nf-soil { display: none; } }

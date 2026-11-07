@@ -17,7 +17,7 @@ export function storeAuthDraft(data: SignatureData) {
     return true;
   } catch { return saved; }
 }
-function readDraft() {
+export function readDraft() {
   const session = sessionStorage.getItem(key);
   if (session) return JSON.parse(session);
   const raw = localStorage.getItem(pendingKey);
