@@ -29,7 +29,11 @@ test("all profession samples validate and render escaped fields and readable dom
     const html = renderSignature({ ...parsed, legalNotice: '<script>alert("x")</script>', address: "Rua <b>Brasil</b>" }, true);
     assert.match(html, /&lt;script&gt;/);
     assert.match(html, /Rua &lt;b&gt;/);
-    assert.equal(sample.address, "");
+    if (sample.professionalRegistrationType) {
+      assert.equal(sample.address, "São Paulo, SP");
+      assert.match(sample.professionalRegistration, /\(exemplo\)/);
+      assert.ok(html.includes(sample.professionalRegistrationType));
+    } else assert.equal(sample.address, "");
     assert.equal(sample.cnpj, "");
     assert.equal(sample.website, "");
     assert.match(html, /alt="WhatsApp"/);

@@ -1,7 +1,7 @@
 import { getTranslator, getLocale } from "@/lib/i18n/server";
 import { LocaleProvider } from "@/lib/i18n/client";
-import Image from "next/image";
-import Link from "next/link";
+import { Footer } from "@/components/layout/Footer";
+
 import { publicSiteUrl } from "@/lib/utils/site-url";
 import type { Metadata } from "next";
 import { GeistSans } from "geist/font/sans";
@@ -37,17 +37,14 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
   const t = await getTranslator();
   const locale = await getLocale();
   const session = await getServerSession(authOptions);
-  return <html lang={locale} suppressHydrationWarning><body className={GeistSans.className} suppressHydrationWarning>
+  return <html lang={locale} suppressHydrationWarning><body className={`${GeistSans.className} flex min-h-dvh flex-col`} suppressHydrationWarning>
     <PostHogProvider>
       <LocaleProvider locale={locale}>
         {session?.user?.id && <PostHogIdentity userId={session.user.id} email={session.user.email} name={session.user.name} />}
         <a href="#conteudo" className="sr-only focus:not-sr-only">{t("Ir para o conteúdo")}</a>
         <Header />
-        <main id="conteudo">{children}</main>
-        <footer className="shell mt-16 flex flex-col items-start justify-between gap-5 border-t border-indigo-100 py-8 text-sm text-slate-600 sm:flex-row sm:items-center">
-          <Link href="/" aria-label={t("Página inicial — Maily")}><Image src="/mascote/logo.png" alt="Maily" width={2172} height={724} sizes="144px" className="h-auto w-36" /></Link>
-          <p>{t("Assinaturas profissionais de e-mail")}</p>
-        </footer>
+        <main id="conteudo" className="flex flex-1 flex-col">{children}</main>
+        <Footer />
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({
       "@context": "https://schema.org",
       "@graph": [

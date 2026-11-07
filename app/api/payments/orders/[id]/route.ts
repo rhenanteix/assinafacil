@@ -1,3 +1,4 @@
+import { sendPaymentReceipt } from "@/lib/email/receipt";
 import { verifiedUserId } from "@/lib/auth";
 import { db } from "@/lib/prisma";
 import { orderView, refreshOrder } from "@/lib/payments/orders";
@@ -11,6 +12,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
   if (!order) return failure("Pagamento não encontrado.", 404);
   try {
     const updated = ["pending", "creating", "uncertain"].includes(order.status) ? await refreshOrder(order) : order;
+    if (updated.status === "approved") await sendPaymentReceipt(updated.id);
     return Response.json({ order: orderView(updated) }, { headers: { "Cache-Control": "no-store" } });
   } catch {
     return failure("Não foi possível consultar o pagamento. Tente novamente.", 503);

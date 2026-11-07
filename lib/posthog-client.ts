@@ -5,7 +5,7 @@ import posthog from "posthog-js";
 let initialized = false;
 
 export function initPostHog() {
-  if (initialized || typeof window === "undefined") return;
+  if (initialized || typeof window === "undefined" || window.location.pathname === "/redefinir-senha") return;
 
   const posthogKey =
     process.env.NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN ??

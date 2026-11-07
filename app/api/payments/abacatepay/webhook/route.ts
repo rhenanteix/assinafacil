@@ -37,7 +37,7 @@ export async function POST(request: Request) {
       await captureServerEvent({
         distinctId: updated.userId,
         event: "payment_completed",
-        properties: { plan: updated.plan, payment_method: updated.method, amount_cents: updated.cents, dev_mode: updated.devMode },
+        properties: { $insert_id: `payment-completed:${updated.id}`, plan: updated.plan, payment_method: updated.method, amount_cents: updated.cents, dev_mode: updated.devMode },
       });
     }
     return Response.json({ ok: true });

@@ -1,3 +1,4 @@
+import { publicSiteUrl } from "@/lib/utils/site-url";
 import { translator, type Locale } from "@/lib/i18n/shared";
 import { whatsappUrl } from "@/types/whatsapp";
 import { renderSocialIcons } from "@/lib/signature/icons";
@@ -73,7 +74,8 @@ export function renderSignature(data: SignatureData, pro: boolean, locale: Local
   const showSide = data.template === "modern" || executive || monogram || luxe ? photo || badge : photo;
 
   const banner = data.template === "banner" || brandDesk ? `<tr><td colspan="3" style="background:${theme};color:${onTheme};padding:7px 12px;font-weight:bold;font-size:12px">${escape(data.company || t("Vamos conversar?"))}</td></tr>` : "";
-  const watermark = pro ? "" : `<tr><td colspan="3" style="padding:6px 12px;font-size:10px;color:#526078">${t("Criado com Maily")}</td></tr>`;
+  const acquisitionUrl = new URL("/?utm_source=signature&utm_medium=email&utm_campaign=free", publicSiteUrl() ?? "https://maily.com.br").href;
+  const watermark = pro ? "" : `<tr><td colspan="3" style="padding:6px 12px;font-size:10px;color:#526078"><a href="${acquisitionUrl}" target="_blank" rel="noopener noreferrer" style="color:#69519a;text-decoration:none;font-family:Arial,sans-serif;font-size:10px;">${t("Criado com Maily")} · Crie sua assinatura</a></td></tr>`;
   const rule = data.template === "classic" || data.template === "executive" || consulting || luxe ? `border-top:2px solid ${theme};` : "";
   const border = data.template === "minimal" || data.template === "modern" ? `border-left:2px solid ${theme};` : "";
 
