@@ -42,7 +42,14 @@ export async function POST(request: Request) {
       provider: "abacatepay", method, devMode, checkoutKey, status: "creating" } });
     return { order, created: true };
   });
-  if ("owned" in reservation) return failure("Você já tem acesso a este produto.", 409);
+  if ("owned" in reservation) {
+    await captureServerEvent({
+      distinctId: account.id,
+      event: "checkout_already_owned",
+      properties: { plan, payment_method: method, amount_cents: plans[plan].cents, dev_mode: devMode },
+    });
+    return failure("Você já tem acesso a este produto.", 409);
+  }
   if ("limited" in reservation) return failure("Aguarde um minuto antes de tentar novamente.", 429);
   const { order, created } = reservation;
   if (!created) return Response.json({ order: orderView(order) }, { headers: { "Cache-Control": "no-store" } });
@@ -75,6 +82,11 @@ export async function POST(request: Request) {
     emitPostHogLog("checkout_provider_charge_failed", SeverityNumber.ERROR, {
       payment_method: method,
       failure_type: error instanceof PaymentApiError ? "provider_rejection" : "provider_or_network",
+    });
+    await captureServerEvent({
+      distinctId: account.id,
+      event: "checkout_failed",
+      properties: { plan, payment_method: method, amount_cents: order.cents, dev_mode: devMode, failure_type: error instanceof PaymentApiError ? "provider_rejection" : "provider_or_network" },
     });
     const rejected = error instanceof PaymentApiError && error.definiteRejection;
     await db.order.updateMany({ where: { id: order.id, status: "creating", paymentId: null }, data: { status: rejected ? "failed" : "uncertain" } });

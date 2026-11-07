@@ -9,6 +9,7 @@ import { MailyToaster } from "@/components/shared/MailyToaster";
 import { Header } from "@/components/layout/Header";
 import { PostHogIdentity } from "@/components/shared/DashboardActions";
 import { PostHogProvider } from "@/components/shared/PostHogProvider";
+import { AnalyticsPageView } from "@/components/shared/AnalyticsPageView";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import "@/styles/globals.css";
@@ -41,6 +42,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
     <PostHogProvider>
       <LocaleProvider locale={locale}>
         {session?.user?.id && <PostHogIdentity userId={session.user.id} email={session.user.email} name={session.user.name} />}
+        <AnalyticsPageView />
         <a href="#conteudo" className="sr-only focus:not-sr-only">{t("Ir para o conteúdo")}</a>
         <Header />
         <main id="conteudo">{children}</main>
