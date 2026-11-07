@@ -24,7 +24,7 @@ export function ModelGallery({ models }: { models: { id: string; label: string; 
   </section>;
 }
 
-export function BusinessContact({ enabled }: { enabled: boolean }) {
+export function BusinessContact({ enabled, contactEmail }: { enabled: boolean; contactEmail?: string }) {
   const t = useTranslation();
   const dialog = useRef<HTMLDialogElement>(null);
   const toasterId = useId();
@@ -34,6 +34,7 @@ export function BusinessContact({ enabled }: { enabled: boolean }) {
     <Button variant="outline" onClick={() => { dialog.current?.showModal(); }}>{t("Falar com a equipe")}</Button>
     <dialog ref={dialog} aria-labelledby="business-title" className="w-[calc(100%-2rem)] max-w-lg rounded-2xl p-6 backdrop:bg-slate-950/60">
       <div className="mb-5 flex items-center justify-between gap-3"><h2 id="business-title" className="text-xl font-bold">{t("Falar com a equipe")}</h2><button type="button" className="underline" onClick={() => dialog.current?.close()}>{t("Fechar")}</button></div>
+      {contactEmail && <p className="mb-4 text-sm text-slate-600">Business: R$ 89,90 inicial + R$ 9,90/mês por empresa, equipe sem limite. A contratação é confirmada pela equipe; este formulário não gera cobrança. Sua solicitação vai para <a className="text-brand underline" href={`mailto:${contactEmail}`}>{contactEmail}</a>. Você também pode escrever diretamente.</p>}
       <form className="space-y-4" onSubmit={async event => {
         event.preventDefault();
         if (!enabled || sending.current) return;
@@ -58,6 +59,7 @@ export function BusinessContact({ enabled }: { enabled: boolean }) {
         <label className="block text-sm font-medium">{t("Mensagem (opcional)")}<textarea name="message" maxLength={1500} rows={3} className="mt-1 block w-full rounded-lg border border-slate-300 p-2" /></label>
         <input name="website" tabIndex={-1} autoComplete="off" aria-hidden="true" className="hidden" />
         {!enabled && <p className="text-sm text-slate-600">{t("Contato comercial a confirmar. Nenhuma mensagem foi enviada.")}</p>}
+        <p className="text-xs text-slate-500">Usamos esses dados para responder à sua solicitação. <a href="/privacidade" className="underline">Política de Privacidade</a></p>
         <Button type="submit" disabled={!enabled || busy}>{busy ? t("Enviando…") : t("Enviar solicitação")}</Button>
       </form>
       {/* Keep errors in the modal top layer, where they remain visible and dismissible. */}

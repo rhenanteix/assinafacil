@@ -1,3 +1,4 @@
+import { sendPaymentReceipt } from "@/lib/email/receipt";
 import type { Order } from "@prisma/client";
 import { db } from "@/lib/prisma";
 import { lockUser } from "@/lib/prisma/signatures";
@@ -17,7 +18,7 @@ export async function applyCharge(orderId: string, charge: Charge, eventId?: str
   const incoming = paymentStatus(charge.status);
   if (!incoming) throw new Error("Unknown payment status");
   const at = new Date(charge.updatedAt);
-  return db.$transaction(async tx => {
+  const result = await db.$transaction(async tx => {
     await lockUser(tx, order.userId);
     const current = await tx.order.findUniqueOrThrow({ where: { id: orderId } });
     if (current.paymentId && current.paymentId !== charge.id) throw new Error("Payment already bound");
@@ -32,6 +33,8 @@ export async function applyCharge(orderId: string, charge: Charge, eventId?: str
     if (eventId) await tx.paymentEvent.create({ data: { id: eventId } });
     return updated;
   });
+  if (result.status === "approved") await sendPaymentReceipt(result.id);
+  return result;
 }
 export async function refreshOrder(order: Order) {
   if (!order.paymentId || order.provider !== "abacatepay") return order;

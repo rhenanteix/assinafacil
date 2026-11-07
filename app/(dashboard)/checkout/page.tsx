@@ -1,3 +1,4 @@
+import { PaymentTrust } from "@/components/payments/PaymentTrust";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { currentAccount } from "@/lib/auth";
@@ -32,5 +33,6 @@ export default async function Checkout({ searchParams }: { searchParams: Promise
     {owned && !initial ? <section className="panel"><p>{t("Você já tem acesso a este produto.")}</p><Link className="mt-3 block text-brand underline" href="/dashboard">{t("Abrir minhas assinaturas")}</Link></section> :
       !checkoutEnabled() ? <p role="status" className="panel">{t("O checkout ainda não está configurado.")}</p> :
         <TransparentCheckout plan={plan} cents={plans[plan].cents} email={account.email} publicKey={cardPublicKey()} devMode={devMode} initial={initial ? orderView(initial) : null} />}
+    <PaymentTrust />
   </div>;
 }

@@ -1,3 +1,4 @@
+import { canAssignFolder } from "@/lib/signature/folders";
 import { prepareSignature } from "@/lib/signature/access";
 import { verifiedUserId } from "@/lib/auth";
 import { db } from "@/lib/prisma";
@@ -20,6 +21,7 @@ export async function POST(request: Request) {
   const result = await db.$transaction(async tx => {
     await lockUser(tx, userId);
     const access = await signatureAccess(userId, tx);
+    if (!await canAssignFolder(tx, userId, parsed.data.folderId, access.business)) return failure("Área indisponível para esta conta.", 403);
     const signature = prepareSignature(parsed.data, access);
     if (!signature) return failure("Este template precisa ser desbloqueado.", 403);
     if (!access.pro) {

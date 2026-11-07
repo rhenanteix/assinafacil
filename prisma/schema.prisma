@@ -12,8 +12,10 @@ model User {
   emailVerified DateTime?
   image         String?
   passwordHash  String?
+  authVersion   Int @default(0)
   createdAt     DateTime? @default(now())
   firstFreeExportAt DateTime?
+  workspace Json?
   accounts      Account[]
   sessions      Session[]
   signatures    Signature[]
@@ -72,6 +74,9 @@ model Order {
   paymentData Json?
   paymentUpdatedAt DateTime?
   lastCheckedAt DateTime?
+  receiptSentAt DateTime?
+  receiptAttemptedAt DateTime?
+  receiptClaimedAt DateTime?
   status     String   @default("pending")
   expiresAt  DateTime?
   createdAt  DateTime @default(now())

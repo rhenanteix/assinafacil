@@ -42,6 +42,15 @@ export const authOptions: NextAuthOptions = {
     },
   },
   callbacks: {
+    async jwt({ token, user }) {
+      if (!token.sub) return token;
+      const account = await db.user.findUnique({ where: { id: token.sub }, select: { authVersion: true } });
+      if (!account) return { ...token, sub: undefined };
+      if (user) token.authVersion = account.authVersion;
+      // Existing sessions predate versioning and count as version zero.
+      if ((token.authVersion ?? 0) !== account.authVersion) return { ...token, sub: undefined };
+      return token;
+    },
     signIn({ account, profile }) {
       return account?.provider !== "google" || (profile as { email_verified?: boolean } | undefined)?.email_verified === true;
     },

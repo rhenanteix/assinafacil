@@ -42,6 +42,8 @@ export function AuthForm({ register = false, google, destination }: { register?:
       <label className="grid gap-2 text-sm font-medium">{t("Senha")}<Input name="password" type="password" autoComplete={register ? "new-password" : "current-password"} minLength={8} maxLength={72} required /></label>
       <Button type="submit" disabled={!!busy} className="w-full">{busy === "auth" ? t("Aguarde…") : register ? t("Criar conta") : t("Entrar")}</Button>
     </form>
+    {!register && <Link href="/recuperar-senha" className="mt-4 block text-sm text-brand underline">Esqueci minha senha</Link>}
+    {register && <p className="mt-4 text-xs text-slate-500">Ao criar sua conta, você concorda com os <Link href="/termos" className="underline">Termos de Uso</Link> e conhece a <Link href="/privacidade" className="underline">Política de Privacidade</Link>.</p>}
     {google && <Button variant="outline" className="mt-3 w-full" disabled={!!busy} onClick={() => void run("google", async () => { await signIn("google", { callbackUrl: "/verificar-email" + suffix }); })}>{t("Continuar com Google")}</Button>}
     <p className="mt-5 text-sm"><Link className="text-brand underline" href={(register ? "/login" : "/cadastro") + suffix}>{register ? t("Já tenho conta") : t("Criar conta gratuita")}</Link></p>
   </div></div>;
