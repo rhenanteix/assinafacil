@@ -8,6 +8,9 @@ import { Button } from "@/components/ui/button";
 import { ProductShowcase } from "@/components/marketing/ProductShowcase";
 import { Reveal } from "@/components/marketing/Reveal";
 import { Offers, BusinessLink } from "@/components/marketing/Offers";
+import { TrackedLink } from "@/components/shared/TrackedLink";
+import { SectionViewTracker } from "@/components/shared/SectionViewTracker";
+import { ModelCardViewTracker } from "@/components/shared/ModelCardViewTracker";
 import { renderSignature } from "@/lib/utils/signature";
 import { demoDemos, templates } from "@/types/signature";
 
@@ -38,13 +41,14 @@ export default async function Home() {
             {" "}{t("Pequenos detalhes. Uma grande impressão.")}{" "}</div>
           <h1 className="mt-5 max-w-2xl text-[clamp(2.8rem,7vw,5.6rem)] font-bold leading-[.98] tracking-[-.075em]">{t("Sua marca em")}{" "}<span className="text-brand">{t("cada e-mail.")}</span></h1>
           <p className="mt-6 max-w-lg text-lg leading-relaxed text-slate-700">{t("Crie uma assinatura profissional em minutos. Para quem atende clientes, fecha negócios e quer levar a identidade da empresa a cada conversa.")}</p>
-          <div className="mt-7 flex flex-wrap gap-3"><Button asChild className="min-h-12"><Link href="/gerador">{t("Criar minha assinatura")}{" "}<ArrowRight size={17} /></Link></Button><Button asChild variant="outline" className="min-h-12"><Link href="#modelos">{t("Explorar modelos")}</Link></Button></div>
+          <div className="mt-7 flex flex-wrap gap-3"><Button asChild className="min-h-12"><TrackedLink event="hero_cta_clicked" properties={{ cta_label: t("Criar minha assinatura"), cta_location: "hero", destination: "/gerador" }} linkProps={{ href: "/gerador" }}>{t("Criar minha assinatura")}{" "}<ArrowRight size={17} /></TrackedLink></Button><Button asChild variant="outline" className="min-h-12"><TrackedLink event="cta_clicked" properties={{ cta_label: t("Explorar modelos"), cta_location: "hero", destination: "#modelos" }} linkProps={{ href: "#modelos" }}>{t("Explorar modelos")}</TrackedLink></Button></div>
           <p className="mt-4 flex items-center gap-2 text-sm text-slate-700"><Check size={16} className="text-brand" /> {" "}{t("Modelo grátis, sem cartão")}</p>
         </div>
         <ProductShowcase />
       </div>
     </section>
     <section id="sobre" className="shell scroll-mt-8 py-16 sm:py-20">
+      <SectionViewTracker section="sobre" label="Conheça a Maily" />
       <Reveal className="grid items-start gap-7 lg:grid-cols-2">
         <div><p className="eyebrow">{t("Conheça a Maily")}</p><h2 className="mt-3 max-w-xl text-4xl font-bold tracking-tight sm:text-5xl">{t("Uma ferramenta de marca para o trabalho de todos os dias.")}</h2></div>
         <p className="max-w-lg text-lg leading-relaxed text-slate-700 lg:pt-8">{t("Seu e-mail merece mais que “Att.”. Crie sua assinatura com o Maily.")}</p>
@@ -54,17 +58,19 @@ export default async function Home() {
       </Reveal>)}</div>
     </section>
     <section id="modelos" className="scroll-mt-8 border-y border-violet-100 bg-[#f1eeff] py-16 sm:py-20">
+      <SectionViewTracker section="modelos" label="Galeria de modelos" />
       <div className="shell"><p className="eyebrow flex items-center gap-2"><LayoutTemplate size={16} /> {" "}{t("Galeria")}</p><h2 className="mt-3 text-4xl font-bold tracking-tight sm:text-5xl">{t("Um modelo para cada tipo de negócio")}</h2><p className="mb-8 mt-3 text-slate-700">{t("Exemplos Pro com o essencial. Você escolhe o que adicionar.")}</p>
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">{examples.map(id => {
           const demo = demoDemos[id];
           const template = templates.find(item => item.id === id)!;
-          const tier = "exclusive" in template ? t("Exclusivo") : template.pro ? "Pro" : "Free";
+          const tierLabel = "exclusive" in template ? t("Exclusivo") : template.pro ? "Pro" : "Free";
+          const tier: "free" | "pro" | "exclusive" = "exclusive" in template ? "exclusive" : template.pro ? "pro" : "free";
           const color = id === "sales" ? "#087c66" : id === "signature-luxe" ? "#936d38" : "#593bec";
-          return <Reveal key={id} className="panel transition-shadow hover:shadow-lg"><div className="mb-4 flex items-center justify-between gap-2"><h3 className="font-bold">{t(template.label)}</h3><span className="rounded-full bg-violet-100 px-2.5 py-1 text-xs font-bold text-brand">{tier}</span></div>
+          return <ModelCardViewTracker key={id} modelId={id} modelLabel={t(template.label)} tier={tier}><Reveal className="panel transition-shadow hover:shadow-lg"><div className="mb-4 flex items-center justify-between gap-2"><h3 className="font-bold">{t(template.label)}</h3><span className="rounded-full bg-violet-100 px-2.5 py-1 text-xs font-bold text-brand">{tierLabel}</span></div>
             <div className="min-h-36 rounded-xl border border-slate-100 p-2" dangerouslySetInnerHTML={{ __html: renderSignature({ ...demo, role: t(demo.role), company: t(demo.company), template: id, color }, template.pro, locale) }} />
-          </Reveal>;
+          </Reveal></ModelCardViewTracker>;
         })}</div>
-        <div className="mt-6 flex flex-wrap gap-3"><Button asChild><Link href="/gerador">{t("Experimentar no gerador")}{" "}<ArrowRight size={16} /></Link></Button><Button asChild variant="outline"><Link href="/precos#exclusivos">{t("Ver modelos exclusivos")}</Link></Button></div></div>
+        <div className="mt-6 flex flex-wrap gap-3"><Button asChild><TrackedLink event="cta_clicked" properties={{ cta_label: t("Experimentar no gerador"), cta_location: "modelos", destination: "/gerador" }} linkProps={{ href: "/gerador" }}>{t("Experimentar no gerador")}{" "}<ArrowRight size={16} /></TrackedLink></Button><Button asChild variant="outline"><TrackedLink event="cta_clicked" properties={{ cta_label: t("Ver modelos exclusivos"), cta_location: "modelos", destination: "/precos#exclusivos" }} linkProps={{ href: "/precos#exclusivos" }}>{t("Ver modelos exclusivos")}</TrackedLink></Button></div></div>
     </section>
     <section className="shell py-12">
       <h2 className="text-3xl font-bold tracking-tight">{t("Seu estilo, além do modelo.")}</h2>
@@ -77,12 +83,13 @@ export default async function Home() {
       <div className="mt-8 flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-violet-50 p-5"><div><h3 className="font-bold">{t("Veja antes de escolher")}</h3><p className="mt-1 text-sm text-slate-600">{t("Prévia ao vivo, exemplos reais do editor e Free sem cartão.")}</p></div><Link href="/gerador" className="font-semibold text-brand underline">{t("Criar grátis")}</Link></div>
     </section>
     <section id="planos" className="shell scroll-mt-8 py-16 sm:py-20">
+      <SectionViewTracker section="planos" label="Preços e planos" />
       <div className="mb-8 flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
         <div className="max-w-3xl"><p className="eyebrow">{t("Free, Pro e Business")}</p><h2 className="mt-3 text-4xl font-bold tracking-tight sm:text-5xl">{t("Comece grátis. Escolha o que faz sentido para você.")}</h2></div>
         <div className="relative self-center rounded-full bg-emerald-50 p-2 sm:shrink-0"><Image src="/mascote/planos.png" alt={t("Mascote lançando um avião de papel feito de uma nota")} width={1312} height={1199} sizes="(max-width: 640px) 160px, 208px" className="h-auto w-40 sm:w-52" /></div>
       </div><Offers />
     </section>
-    <section id="empresas" className="shell scroll-mt-8"><Reveal className="grid gap-8 rounded-[2rem] bg-[#201344] p-6 text-white sm:p-10 lg:grid-cols-[1.2fr_1fr]">
+    <section id="empresas" className="shell scroll-mt-8"><SectionViewTracker section="empresas" label="Maily Business" /><Reveal className="grid gap-8 rounded-[2rem] bg-[#201344] p-6 text-white sm:p-10 lg:grid-cols-[1.2fr_1fr]">
       <div><p className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-lime-200"><Building2 size={16} /> Maily Business</p><h2 className="mt-4 text-4xl font-bold tracking-tight">{t("Uma identidade para a equipe inteira.")}</h2><p className="mt-4 max-w-xl leading-relaxed text-violet-100">{t("Definimos um modelo com sua marca e preparamos um lote com os dados de cada pessoa. Sua empresa recebe as assinaturas prontas para instalar.")}</p><div className="mt-6 [&_p]:text-violet-100"><BusinessLink /></div></div>
       <ol className="space-y-3 self-center text-sm">{[t("Alinhamento de identidade visual"), t("Validação de uma assinatura piloto"), t("Produção em lote e guia de instalação")].map((item, index) => <li key={item} className="flex items-center gap-3 rounded-xl border border-white/20 p-3"><span className="grid h-8 w-8 place-items-center rounded-full bg-lime-200 font-bold text-[#201344]">{index + 1}</span>{item}</li>)}</ol>
     </Reveal></section>

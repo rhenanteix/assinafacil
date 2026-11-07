@@ -4,6 +4,7 @@ import { useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { useLocale } from "@/lib/i18n/client";
 import { localeCookie, resolveLocale } from "@/lib/i18n/shared";
+import { track } from "@/lib/posthog-client";
 
 export function LanguageSwitcher() {
   const locale = useLocale();
@@ -20,6 +21,7 @@ export function LanguageSwitcher() {
           aria-label="Português (Brasil)"
           onClick={() => {
             if (locale === "pt-BR") return;
+            track("language_changed", { from: locale, to: "pt-BR" });
             document.cookie = `${localeCookie}=pt-BR; Path=/; Max-Age=31536000; SameSite=Lax${location.protocol === "https:" ? "; Secure" : ""}`;
             startTransition(() => router.refresh());
           }}
@@ -39,6 +41,7 @@ export function LanguageSwitcher() {
           aria-label="English (US)"
           onClick={() => {
             if (locale === "en") return;
+            track("language_changed", { from: locale, to: "en" });
             document.cookie = `${localeCookie}=en; Path=/; Max-Age=31536000; SameSite=Lax${location.protocol === "https:" ? "; Secure" : ""}`;
             startTransition(() => router.refresh());
           }}

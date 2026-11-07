@@ -4,6 +4,7 @@ import { useTranslation } from "@/lib/i18n/client";
 
 import { clearDraft } from "@/hooks/use-signature-draft";
 import posthog from "posthog-js";
+import { track } from "@/lib/posthog-client";
 import { signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
@@ -41,7 +42,12 @@ export function PostHogIdentity({ userId, email, name }: PostHogIdentityProps) {
 
 export function SignOutButton() {
   const t = useTranslation();
-  return <Button variant="ghost" onClick={() => { clearDraft(); posthog.reset(); void signOut({ callbackUrl: "/" }); }}>{t("Sair")}</Button>;
+  return <Button variant="ghost" onClick={() => {
+    track("account_logged_out");
+    clearDraft();
+    posthog.reset();
+    void signOut({ callbackUrl: "/" });
+  }}>{t("Sair")}</Button>;
 }
 export function DeleteSignature({ id, name }: { id: string; name: string }) {
   const t = useTranslation();
@@ -49,6 +55,7 @@ export function DeleteSignature({ id, name }: { id: string; name: string }) {
   const { busy, run } = useSignatureActions();
   return <Button variant="ghost" aria-label={t("Excluir {name}", { name })} disabled={!!busy} onClick={() => {
     if (!window.confirm(t("Excluir a assinatura “{name}”?", { name }))) return;
+    track("signature_delete_confirmed", { signature_id: id, signature_name: name });
     void run("delete", async () => {
       await jsonRequest(`/api/signatures/${id}`, { method: "DELETE" });
       router.replace("/dashboard");

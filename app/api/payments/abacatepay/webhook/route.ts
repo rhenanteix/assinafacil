@@ -3,6 +3,7 @@ import { verifyAbacateWebhook } from "@/lib/abacatepay/security";
 import { chargeSchema, getCharge } from "@/lib/abacatepay/client";
 import { paymentDevMode } from "@/lib/abacatepay/config";
 import { applyCharge } from "@/lib/payments/orders";
+import { plans, isPlan } from "@/lib/payments/plans";
 import { db } from "@/lib/prisma";
 import { captureServerEvent } from "@/lib/posthog-server";
 import { failure } from "@/lib/utils/http";
@@ -33,11 +34,38 @@ export async function POST(request: Request) {
     const current = await getCharge(charge.id);
     if (current.id !== charge.id) throw new Error("Payment ID mismatch");
     const updated = await applyCharge(order.id, current, eventId);
+    const planLabel = isPlan(updated.plan) ? plans[updated.plan].label : updated.plan;
+    const baseProperties = {
+      plan: updated.plan,
+      plan_label: planLabel,
+      amount_cents: updated.cents,
+      payment_method: updated.method,
+      order_id: updated.id,
+      dev_mode: updated.devMode,
+    };
     if (event.data.event === "transparent.completed" && updated.status === "approved") {
       await captureServerEvent({
         distinctId: updated.userId,
         event: "payment_completed",
-        properties: { plan: updated.plan, payment_method: updated.method, amount_cents: updated.cents, dev_mode: updated.devMode },
+        properties: baseProperties,
+      });
+    } else if (event.data.event === "transparent.refunded") {
+      await captureServerEvent({
+        distinctId: updated.userId,
+        event: "payment_refunded",
+        properties: baseProperties,
+      });
+    } else if (event.data.event === "transparent.disputed") {
+      await captureServerEvent({
+        distinctId: updated.userId,
+        event: "payment_disputed",
+        properties: baseProperties,
+      });
+    } else if (event.data.event === "transparent.lost") {
+      await captureServerEvent({
+        distinctId: updated.userId,
+        event: "payment_failed",
+        properties: { ...baseProperties, reason: "lost_or_failed" },
       });
     }
     return Response.json({ ok: true });
