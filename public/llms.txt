@@ -1,0 +1,32 @@
+# Maily
+
+> Gerador de assinatura de e-mail profissional. Crie uma assinatura em minutos, personalize com logo, foto e contatos, exporte em HTML ou PNG e padronize assinaturas da empresa.
+
+## Produto
+- Site: https://maily.app
+- Gerador: https://maily.app/gerador
+- Preços: https://maily.app/precos
+
+## Recursos
+- Modelo Free (Essencial) sem cartão
+- 12 modelos Pro + exclusivos
+- Exportação HTML com links clicáveis e PNG
+- Personalização de cores, foto, logo, redes sociais
+- Marca d'água no Free; sem marca no Pro
+- Assinaturas salvas: 1 (Free) / ilimitadas (Pro)
+
+## Planos
+- Free: 1 modelo, 1 assinatura salva
+- Pro: 13 modelos, assinaturas ilimitadas, sem marca d'água
+- Modelos exclusivos: signature-luxe, brand-desk (pagamento único)
+
+## Uso
+1. Acesse /gerador
+2. Preencha dados (nome, cargo, e-mail, telefone, empresa)
+3. Escolha modelo e personalize
+4. Copie o HTML ou baixe o PNG
+5. Cole no campo de assinatura do seu e-mail (Gmail, Outlook, Apple Mail)
+
+## FAQ
+- Como instalar o HTML? Copie e cole no campo de assinatura do e-mail.
+- PNG no Gmail/Outlook? Baixe o PNG e insira como imagem na assinatura.

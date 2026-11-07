@@ -15,15 +15,22 @@ import "@/styles/globals.css";
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslator();
+  const locale = await getLocale();
+  const url = publicSiteUrl();
   return {
-    metadataBase: publicSiteUrl(),
+    metadataBase: url,
     icons: {
       icon: { url: "/mascote/boas-vindas.png", type: "image/png" },
       apple: { url: "/mascote/boas-vindas.png", type: "image/png" },
     },
     title: { default: t("Maily | Assinaturas profissionais de e-mail"), template: "%s | Maily" },
     description: t("Crie uma assinatura profissional de e-mail em minutos. Personalize templates e exporte em HTML ou PNG."),
-    openGraph: { title: "Maily", description: t("Crie sua assinatura profissional de e-mail com prévia ao vivo."), locale: (await getLocale()) === "en" ? "en_US" : "pt_BR", type: "website" },
+    keywords: ["assinatura de e-mail", "gerador de assinatura", "assinatura profissional", "assinatura Gmail", "assinatura Outlook", "assinatura HTML", "assinatura PNG"],
+    authors: [{ name: "Maily" }],
+    robots: { index: true, follow: true, googleBot: { index: true, follow: true, "max-image-preview": "large", "max-snippet": -1 } },
+    alternates: { canonical: url?.href },
+    openGraph: { title: "Maily", description: t("Crie sua assinatura profissional de e-mail com prévia ao vivo."), url: url?.href, siteName: "Maily", locale: locale === "en" ? "en_US" : "pt_BR", type: "website", images: [{ url: "/mascote/logo.png", width: 2172, height: 724, alt: "Maily" }] },
+    twitter: { card: "summary_large_image", title: "Maily", description: t("Crie sua assinatura profissional de e-mail com prévia ao vivo."), images: ["/mascote/logo.png"] },
   };
 }
 export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
@@ -41,7 +48,15 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
           <Link href="/" aria-label={t("Página inicial — Maily")}><Image src="/mascote/logo.png" alt="Maily" width={2172} height={724} sizes="144px" className="h-auto w-36" /></Link>
           <p>{t("Assinaturas profissionais de e-mail")}</p>
         </footer>
-        <MailyToaster />
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({
+      "@context": "https://schema.org",
+      "@graph": [
+        { "@type": "Organization", name: "Maily", url: publicSiteUrl()?.href, logo: publicSiteUrl() ? new URL("/mascote/logo.png", publicSiteUrl()!).href : undefined },
+        { "@type": "WebSite", name: "Maily", url: publicSiteUrl()?.href, inLanguage: "pt-BR" },
+        { "@type": "SoftwareApplication", name: "Maily", applicationCategory: "BusinessApplication", operatingSystem: "Web", offers: { "@type": "Offer", price: "0", priceCurrency: "BRL" }, description: "Gerador de assinatura de e-mail profissional." },
+      ],
+    }) }} />
+    <MailyToaster />
       </LocaleProvider>
     </PostHogProvider>
   </body></html>;
