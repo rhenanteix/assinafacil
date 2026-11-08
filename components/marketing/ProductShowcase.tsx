@@ -27,7 +27,7 @@ export function ProductShowcase() {
       </div>
       <div className="grid gap-4 bg-[#f8f7ff] p-4 sm:p-6">
         <div className="grid min-h-48 place-items-center overflow-hidden rounded-2xl border border-dashed border-violet-200 bg-white p-3">
-          <SignaturePreview data={{ ...emptySignature, name, role: t("Diretora de Design"), company: t("Estúdio Horizonte"), email: "marina@example.com" }} premium={false} capture={capture} />
+          <SignaturePreview data={{ ...emptySignature, name, role: t("Diretora de Design"), company: t("Estúdio Horizonte"), email: "marina@estudiohorizonte.com.br" }} premium={false} capture={capture} />
         </div>
         <label className="grid gap-2 rounded-xl bg-white p-3 text-xs font-semibold">{t("Experimente com seu nome")}{" "}<input value={name} onChange={e => setName(e.target.value)} maxLength={60} className="min-w-0 rounded-lg border border-slate-300 px-2 py-2 text-sm" />
         </label>

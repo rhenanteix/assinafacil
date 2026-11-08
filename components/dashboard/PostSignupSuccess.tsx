@@ -13,6 +13,8 @@ const guides = [
   { id: "outlook-desktop", name: "Outlook (desktop)", steps: ["No Outlook, vá em Arquivo > Opções > Email > Assinaturas.", "Crie uma assinatura. Se colar HTML direto não funcionar, salve o HTML como arquivo e use a opção de inserir/colar conforme sua versão.", "Defina para novas mensagens/respostas."] },
   { id: "apple-mail", name: "Apple Mail", steps: ["Copie o HTML.", "Mail > Ajustes > Assinaturas > selecione a conta e crie uma assinatura.", "Cole o conteúdo. Em algumas versões é preciso colar com formatação preservada.", "Envie um teste para confirmar links e imagens."] },
   { id: "mobile", name: "Celular", steps: ["No app do e-mail, abra configurações de assinatura.", "Cole a versão em texto ou imagem conforme o app suportar (muitos apps móveis têm suporte limitado a HTML rico).", "Faça um envio de teste do próprio celular."] },
+  { id: "roundcube", name: "Roundcube (hospedagem)", steps: ["Copie o HTML da assinatura.", "No Roundcube, abra Configurações > Identidades e selecione sua conta.", "No campo Assinatura, cole o conteúdo formatado (ou insira o PNG baixado).", "Salve e envie um e-mail de teste para conferir."] },
+  { id: "zimbra", name: "Zimbra (hospedagem)", steps: ["Copie o HTML da assinatura.", "No Zimbra, vá em Preferências > E-mail > Assinatura.", "Crie uma assinatura, cole o conteúdo formatado e marque como padrão se desejar.", "Salve e envie um e-mail de teste para conferir."] },
 ];
 
 export function PostSignupSuccess({ data, premium, signatureId }: { data: SignatureData; premium: boolean; signatureId: string }) {

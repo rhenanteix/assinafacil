@@ -1,8 +1,9 @@
 import { publicSiteUrl } from "@/lib/utils/site-url";
 import { translator, type Locale } from "@/lib/i18n/shared";
-import { whatsappUrl } from "@/types/whatsapp";
+import { whatsappUrl, whatsappLink } from "@/types/whatsapp";
 import { renderSocialIcons } from "@/lib/signature/icons";
 import { emptySignature, type SignatureData } from "@/types/signature";
+import { formatarRegistro } from "@/lib/professions/registries";
 
 const escape = (value: string) => value.replace(/[&<>"']/g, (char) =>
   ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[char] ?? char);
@@ -44,8 +45,10 @@ export function renderSignature(data: SignatureData, pro: boolean, locale: Local
   const websiteHref = safeUrl(data.website);
 
   const regType = regTypeLabel(data.professionalRegistrationType);
+  const registroFormatado = data.professionalRegistration ? formatarRegistro(data.professionalRegistrationType ?? "", data.professionalRegistration, data.professionalRegistrationUf, data.professionalRegistrationRqe) : "";
   const professionalLine = [
-    data.professionalRegistration ? [regType, data.professionalRegistration].filter(Boolean).join(": ") : "",
+    registroFormatado,
+    data.cep ? `CEP: ${data.cep}` : "",
     data.cnpj && data.professionalRegistrationType !== "CNPJ" ? `CNPJ: ${data.cnpj}` : "",
     data.address,
   ].filter(Boolean).map(line => `<div style="font-size:12px;color:#475569;line-height:18px;word-wrap:break-word">${escape(line)}</div>`).join("");
@@ -78,7 +81,8 @@ export function renderSignature(data: SignatureData, pro: boolean, locale: Local
   const bg = luxe ? "#fff8eb" : studio ? "#f8f7ff" : brandDesk ? "#f1f5f9" : data.template === "wellness" || data.template === "clinic" ? "#f7fffb" : data.template === "education" ? "#fffbeb" : data.template === "property" ? "#f0f9ff" : "#ffffff";
   const label = consulting ? `<div style="font-size:9px;letter-spacing:1.5px;color:#475569;margin-bottom:5px">${t("CONTATO PROFISSIONAL")}</div>` : data.template === "developer" ? `<div style="font-size:10px;color:${theme};font-family:Arial,sans-serif;margin-bottom:4px">&lt;/&gt;</div>` : data.template === "education" ? `<div style="font-size:9px;letter-spacing:1px;color:${theme};margin-bottom:5px">${t("EDUCAÇÃO")}</div>` : "";
 
-  const whatsapp = whatsappUrl(data.whatsapp);
+  const whatsappSource = data.whatsapp || (data.whatsappSameAsPhone && data.phone ? data.phone : "");
+  const whatsapp = whatsappSource ? whatsappLink(whatsappSource, data.whatsappMessage) : null;
   const whatsappBtn = whatsapp && !pro ? `<table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr><td style="padding-top:8px;font-family:Arial,sans-serif;font-size:12px;line-height:18px"><a href="${safeUrl(whatsapp)}" style="color:#087443;text-decoration:underline;font-weight:bold">${t("Conversar no WhatsApp")}</a></td></tr></table>` : "";
 
   const signoff = data.signoff.trim() ? `<div style="font-size:12px;margin-bottom:4px;color:#475569;overflow-wrap:anywhere">${escape(data.signoff)}</div>` : "";
@@ -110,13 +114,16 @@ export function renderSignatureText(data: SignatureData, pro: boolean, locale: L
   if (data.role) lines.push(data.role);
   if (data.company) lines.push(data.company);
   const regType = regTypeLabel(data.professionalRegistrationType);
-  if (data.professionalRegistration) lines.push([regType, data.professionalRegistration].filter(Boolean).join(": "));
+  const registroFormatado = data.professionalRegistration ? formatarRegistro(data.professionalRegistrationType ?? "", data.professionalRegistration, data.professionalRegistrationUf, data.professionalRegistrationRqe) : "";
+  if (registroFormatado) lines.push(registroFormatado);
+  if (data.cep) lines.push(`CEP: ${data.cep}`);
   if (data.cnpj && data.professionalRegistrationType !== "CNPJ") lines.push(`CNPJ: ${data.cnpj}`);
   if (data.address) lines.push(data.address);
   if (data.phone) lines.push(data.phone);
   if (data.email) lines.push(data.email);
   if (data.website) lines.push(data.website);
-  const whatsapp = whatsappUrl(data.whatsapp);
+  const whatsappSource = data.whatsapp || (data.whatsappSameAsPhone && data.phone ? data.phone : "");
+  const whatsapp = whatsappSource ? whatsappLink(whatsappSource, data.whatsappMessage) : null;
   if (whatsapp) lines.push(`WhatsApp: ${whatsapp}`);
   if (pro && data.ctaLabel.trim()) {
     const href = data.ctaType === "whatsapp" ? whatsapp : safeUrl(data.ctaUrl);

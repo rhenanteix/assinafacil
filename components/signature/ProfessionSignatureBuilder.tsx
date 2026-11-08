@@ -11,6 +11,7 @@ import { Lock, Clipboard, Save, FileText } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { MaskedInput } from "@/components/ui/masked-input";
 import { EmailMockup } from "./EmailMockup";
 import { SignaturePreview } from "./SignaturePreview";
 import { TemplateSelector } from "./TemplateSelector";
@@ -19,6 +20,9 @@ import { socialNetworks } from "@/types/social";
 import { jsonRequest, useSignatureActions } from "@/hooks/use-signature-actions";
 import { clearDraft, storeAuthDraft, storeDraftMeta, useSignatureDraft } from "@/hooks/use-signature-draft";
 import { professionPacks, type ProfessionPack } from "@/lib/professions";
+import { conselhosProfissionais } from "@/lib/professions/registries";
+import { avisosModelo } from "@/lib/professions/notices";
+import { avaliarRegras, textoGuia } from "@/lib/professions/checklist";
 import { maskPhoneBR, maskCEP, maskCNPJ, validCEP, validCNPJ } from "@/lib/masks";
 import { captureUtm } from "@/lib/utm";
 
@@ -41,6 +45,8 @@ export function ProfessionSignatureBuilder({ initial = emptySignature, pro = fal
   const [to, setTo] = useState("cliente@exemplo.com.br");
   const [subject, setSubject] = useState(t("Retorno sobre sua mensagem"));
   const [viewTemplate, setViewTemplate] = useState<SignatureData["template"] | null>(null);
+  const [cnpjBusy, setCnpjBusy] = useState(false);
+  const [cnpjSugestao, setCnpjSugestao] = useState<{ razao_social?: string; nome_fantasia?: string; logradouro?: string; bairro?: string; municipio?: string; uf?: string; telefone?: string; cep?: string } | null>(null);
   const pack = professionPacks.find(p => p.id === professionId);
   const form = useForm<SignatureData>({ defaultValues: { ...initial, professionId: initialProfession ?? initial.professionId ?? "" }, resolver: zodResolver(signatureSchema) });
   useSignatureDraft(form, !id && restoreDraft, { pro, owned });
@@ -138,11 +144,79 @@ export function ProfessionSignatureBuilder({ initial = emptySignature, pro = fal
         {field("company","Empresa")}
         {field("phone","Telefone","tel","+55 (11) 99999-0000", maskPhoneBR)}
         {field("whatsapp","WhatsApp","tel","+55 (11) 99999-0000", maskPhoneBR)}
+        <label className="flex items-center gap-2 text-sm">
+          <input type="checkbox" value={(data as any).whatsappSameAsPhone ? "1" : ""} onChange={e=>form.setValue("whatsappSameAsPhone", e.target.checked,{shouldDirty:true})} />
+          {t("Usar o mesmo número do telefone para o WhatsApp")}
+        </label>
+        <label className="grid gap-1.5 text-sm font-medium">{t("Mensagem pré-preenchida no WhatsApp")}
+          <Input type="text" value={(data as any).whatsappMessage ?? ""} placeholder="Olá, vim pelo seu e-mail" onChange={e=>form.setValue("whatsappMessage", e.target.value,{shouldDirty:true})} />
+          <p className="text-xs text-slate-600">{t("Será codificada no link do WhatsApp.")}</p>
+        </label>
         {field("email","E-mail","email","nome@exemplo.com.br")}
         {field("address","Endereço")}
         {field("website", pack?.id === "freelancer-designer" ? "Portfólio / site" : "Site","url","https://")}
-        {pack?.id !== "freelancer-designer" && field("cnpj","CNPJ","text","00.000.000/0000-00", maskCNPJ)}
+        {pack?.id !== "freelancer-designer" && (
+          <div className="flex flex-col gap-2">
+            <label className="grid gap-1.5 text-sm font-medium">CNPJ
+              <div className="flex gap-2">
+                <MaskedInput mask="cnpj" {...(()=>{const {onChange:_o,...rest}=form.register("cnpj");return rest;})()} onChange={(v)=>form.setValue("cnpj",v,{shouldValidate:true,shouldDirty:true})} placeholder="00.000.000/0000-00" aria-invalid={!!form.formState.errors.cnpj} aria-describedby={form.formState.errors.cnpj ? "error-cnpj" : undefined} />
+                <button type="button" disabled={cnpjBusy || !validCNPJ(form.getValues("cnpj") as string)} className="px-3 py-1.5 text-xs font-medium rounded-md border border-slate-300 bg-white hover:bg-slate-50 disabled:opacity-50" onClick={async () => {
+                  const raw = form.getValues("cnpj") as string;
+                  setCnpjBusy(true);
+                  try {
+                    const response = await fetch("/api/lookup", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ tipo: "cnpj", valor: raw }) });
+                    if (!response.ok) throw new Error("falha");
+                    const { data } = await response.json();
+                    setCnpjSugestao(data ?? null);
+                  } catch {
+                    setCnpjSugestao(null);
+                  } finally {
+                    setCnpjBusy(false);
+                  }
+                }}>{cnpjBusy ? "…" : "Consultar CNPJ"}</button>
+              </div>
+              {form.formState.errors.cnpj && <span id="error-cnpj" className="text-xs text-red-700">{t(form.formState.errors.cnpj.message ?? "CNPJ inválido.")}</span>}
+            </label>
+            {cnpjSugestao && (
+              <div className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-950 space-y-2">
+                <p className="font-semibold">{t("Preencher com dados da empresa?")}</p>
+                <p className="text-xs">{cnpjSugestao.nome_fantasia || cnpjSugestao.razao_social || ""}</p>
+                <p className="text-xs">{[cnpjSugestao.logradouro, cnpjSugestao.bairro, `${cnpjSugestao.municipio}/${cnpjSugestao.uf}`].filter(Boolean).join(", ")}</p>
+                <div className="flex gap-2">
+                  <button type="button" className="px-3 py-1.5 text-xs font-medium rounded-md bg-brand text-white hover:bg-brand/90" onClick={() => {
+                    const valores = form.getValues();
+                    if (!valores.company && (cnpjSugestao?.nome_fantasia || cnpjSugestao?.razao_social)) form.setValue("company", cnpjSugestao.nome_fantasia ?? cnpjSugestao?.razao_social ?? "", { shouldDirty: true });
+                    if (!valores.address && cnpjSugestao?.logradouro) {
+                      const endereco = [cnpjSugestao.logradouro, cnpjSugestao.bairro, `${cnpjSugestao.municipio}/${cnpjSugestao.uf}`].filter(Boolean).join(", ");
+                      form.setValue("address", endereco, { shouldDirty: true });
+                    }
+                    if (!valores.phone && cnpjSugestao?.telefone) form.setValue("phone", cnpjSugestao.telefone, { shouldDirty: true });
+                    if (!valores.whatsapp && cnpjSugestao?.telefone) form.setValue("whatsapp", cnpjSugestao.telefone, { shouldDirty: true });
+                    setCnpjSugestao(null);
+                    posthog.capture("cnpj_autofill_accepted", { profession_id: professionId || undefined, ...utm });
+                  }}>{t("Aplicar dados")}</button>
+                  <button type="button" className="px-3 py-1.5 text-xs font-medium rounded-md border border-slate-300 bg-white hover:bg-slate-50" onClick={() => {
+                    setCnpjSugestao(null);
+                    posthog.capture("cnpj_autofill_declined", { profession_id: professionId || undefined, ...utm });
+                  }}>{t("Ignorar")}</button>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
         {pack?.fields.find(f=>f.key==="professionalRegistration") && field("professionalRegistration", pack.fields.find(f=>f.key==="professionalRegistration")?.label ?? "Registro profissional")}
+        {(form.getValues("professionalRegistrationType") && form.getValues("professionalRegistrationType") !== "") && (
+          <div className="flex flex-col gap-2">
+            <label className="grid gap-1.5 text-sm font-medium">UF
+              <Input type="text" value={(data as any).professionalRegistrationUf ?? ""} placeholder="SP" maxLength={2} onChange={e=>form.setValue("professionalRegistrationUf", e.target.value.toUpperCase(),{shouldDirty:true})} />
+            </label>
+            {conselhosProfissionais.find(c=>c.id===form.getValues("professionalRegistrationType"))?.rqe && (
+              <label className="grid gap-1.5 text-sm font-medium">RQE (opcional)
+                <Input type="text" value={(data as any).professionalRegistrationRqe ?? ""} placeholder="Ex.: 12345" onChange={e=>form.setValue("professionalRegistrationRqe", e.target.value,{shouldDirty:true})} />
+              </label>
+            )}
+          </div>
+        )}
         {pack?.id === "freelancer-designer" && field("behance", "Behance", "url", "https://behance.net/")}
         {pack?.id === "freelancer-designer" && field("dribbble", "Dribbble", "url", "https://dribbble.com/")}
         {pack?.id === "freelancer-designer" && field("instagram", "Instagram", "url", "https://instagram.com/")}
@@ -155,7 +229,23 @@ export function ProfessionSignatureBuilder({ initial = emptySignature, pro = fal
       </div>}
       {tab === "Extras" && <div className="space-y-4">
         <div className="space-y-2"><h3 className="font-semibold">{t("CTA")}</h3>{pro ? <div className="grid gap-3 sm:grid-cols-2">{field("ctaLabel","Texto do botão")}<label className="grid gap-1.5 text-sm font-medium">{t("Tipo")}<select className="rounded-lg border border-slate-300 p-2" value={data.ctaType} onChange={e=>form.setValue("ctaType", e.target.value as any,{shouldDirty:true})}><option value="link">{t("Link")}</option><option value="whatsapp">WhatsApp</option></select></label>{data.ctaType==="link" && field("ctaUrl","URL do botão","url","https://")}</div> : <ProLock note="CTA do pacote está disponível no Pro." source="cta" />}</div>
-        <div className="space-y-2"><h3 className="font-semibold">{t("Aviso")}</h3>{pro ? <><textarea className="w-full rounded-lg border border-slate-300 p-2 text-sm" rows={3} value={data.legalNotice} onChange={e=>form.setValue("legalNotice", e.target.value,{shouldDirty:true})} /><p className="text-xs text-slate-600">{t("Texto-modelo. Revise com o conselho ou profissional da área antes de usar. Não garante conformidade legal ou regulatória.")}</p></> : <ProLock note="Bloco de aviso está disponível no Pro." source="notice" />}</div>
+        <div className="space-y-2"><h3 className="font-semibold">{t("Aviso")}</h3>{pro ? <div className="space-y-2">
+          <label className="grid gap-1.5 text-sm font-medium">{t("Aviso-modelo (opcional)")}
+            <select className="rounded-lg border border-slate-300 p-2 text-sm" value={data.legalNotice ? "custom" : ""} onChange={e=>{
+              const id = e.target.value;
+              if (id && id !== "custom" && !data.legalNotice) {
+                const aviso = avisosModelo.find(a => a.id === id);
+                if (aviso) form.setValue("legalNotice", aviso.texto, { shouldDirty: true });
+              }
+            }}>
+              <option value="">{t("Nenhum")}</option>
+              {avisosModelo.filter((a: (typeof avisosModelo)[number]) => !a.profissoes || a.profissoes.length === 0 || a.profissoes.includes(professionId || "")).map((a: (typeof avisosModelo)[number]) => <option key={a.id} value={a.id}>{a.label}</option>)}
+              <option value="custom">{t("Texto personalizado")}</option>
+            </select>
+          </label>
+          <textarea className="w-full rounded-lg border border-slate-300 p-2 text-sm" rows={3} value={data.legalNotice} onChange={e=>form.setValue("legalNotice", e.target.value,{shouldDirty:true})} />
+          <p className="text-xs text-slate-600">{t("Texto-modelo. Revise com o conselho ou profissional da área antes de usar. Não garante conformidade legal ou regulatória.")}</p>
+        </div> : <ProLock note="Bloco de aviso está disponível no Pro." source="notice" />}</div>
         <div className="space-y-2"><h3 className="font-semibold">{t("Despedida")}</h3>{field("signoff","Despedida","text","Atenciosamente,")}</div>
       </div>}
       {tab === "Empresa" && <div className="space-y-3">
@@ -169,6 +259,19 @@ export function ProfessionSignatureBuilder({ initial = emptySignature, pro = fal
       <TemplateSelector value={data.template} pro={pro} owned={owned} onChange={template=>{ setViewTemplate(null); form.setValue("template", template,{shouldDirty:true}); }} onLocked={template=>{ setViewTemplate(template); posthog.capture("resource_pro_locked_seen", { source: "template_preview", tab, template, profession_id: professionId || undefined, ...utm }); }} />
       {previewingLocked && <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-950"><span><strong>{templates.find(x=>x.id===viewTemplate)?.label}</strong> é um modelo Pro. Você pode visualizar, mas não salvar/exportar neste plano.</span><span className="flex gap-2"><Button type="button" variant="outline" onClick={()=>setViewTemplate(null)}>{t("Voltar ao meu modelo")}</Button><Button asChild type="button"><Link href="/precos" onClick={()=>posthog.capture("upgrade_started",{source:"template_preview",template:viewTemplate,...utm})}>{t("Conheça o Pro")}</Link></Button></span></div>}
       {pack && !pro && <p className="text-xs text-slate-600">{t("Modelos recomendados do pacote disponíveis no Pro:")} {pack.recommendedModels.join(", ")}</p>}
+      {professionId && <div className="mt-4 rounded-xl border border-slate-200 bg-slate-50 p-3 space-y-2">
+        <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-600">{t("Pontos de atenção")}</h3>
+        <p className="text-xs text-slate-500">{textoGuia}</p>
+        <ul className="text-xs space-y-1">
+          {avaliarRegras(professionId, form.getValues()).map(({ id, label, resultado }) => (
+            <li key={id} className={`flex items-center gap-1.5 ${resultado.ok ? "text-green-700" : "text-amber-700"}`}>
+              <span className={resultado.ok ? "text-green-500" : "text-amber-500"}>{resultado.ok ? "✓" : "!"}</span>
+              <span>{label}</span>
+              {resultado.ok ? "" : <span className="ml-1 text-[10px] opacity-70">{resultado.motivo}</span>}
+            </li>
+          ))}
+        </ul>
+      </div>}
     </section>
 
     <section className="panel space-y-4 lg:sticky lg:top-5" aria-label={t("Prévia e ações")}>

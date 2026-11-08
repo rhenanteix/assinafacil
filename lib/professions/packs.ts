@@ -37,7 +37,7 @@ export const professionPacks: ProfessionPack[] = [
     cta: { label: "Agendar visita", labelEn: "Schedule a visit", type: "whatsapp" },
     notice: { text: "", editable: true },
     recommendedModels: ["sales", "property", "compact", "essential"] as SignatureData["template"][],
-    example: ex({ name: "Marina Costa", role: "Corretora de imóveis", company: "Horizonte Negócios Imobiliários", email: "marina@exemplo-imoveis.com.br", professionalRegistrationType: "CRECI", template: "sales", color: "#087c66" }),
+    example: ex({ name: "Marina Costa", role: "Corretora de imóveis", company: "Horizonte Negócios Imobiliários", email: "marina@exemplo-imoveis.com.br", professionalRegistrationType: "CRECI", template: "sales", color: "#087c66", cnpj: "11.222.333/0001-81" }),
     seo: {
       forWho: "Para corretores e consultores imobiliários que querem apresentar CRECI, contato e imobiliária com clareza em cada e-mail.",
       whyItWorks: "Reúne identificação profissional e canais de contato em um formato legível, com espaço para o CTA de visita.",

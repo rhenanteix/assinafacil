@@ -39,3 +39,37 @@ export function validCNPJ(value: string) {
   };
   return calc(12) === Number(d[12]) && calc(13) === Number(d[13]);
 }
+
+export function maskPhoneInput(value: string) {
+  const d = digits(value).replace(/^55/, "").slice(0, 11);
+  if (!d) return "";
+  const dd = d.slice(0, 2);
+  const rest = d.slice(2);
+  if (d.length <= 2) return `+55 (${dd}`;
+  if (d.length <= 6) return `+55 (${dd}) ${rest}`;
+  if (d.length <= 10) return `+55 (${dd}) ${rest.slice(0, 4)}-${rest.slice(4)}`;
+  return `+55 (${dd}) ${rest.slice(0, 5)}-${rest.slice(5)}`;
+}
+
+export function normalizePhoneBR(value: string) {
+  const d = digits(value).replace(/^55/, "");
+  if (!d) return { kind: "", ddd: "", number: "", formatted: "" };
+  const dd = d.slice(0, 2);
+  const rest = d.slice(2);
+  const isMobile = rest.length === 9 && rest.startsWith("9");
+  const kind = isMobile ? "celular" : "fixo";
+  const formatted = maskPhoneBR(value);
+  return { kind, ddd: dd, number: rest, formatted };
+}
+
+export function validPhoneBR(value: string) {
+  if (!value.trim()) return true;
+  const d = digits(value).replace(/^55/, "");
+  if (d.length < 10 || d.length > 11) return false;
+  const dd = d.slice(0, 2);
+  const rest = d.slice(2);
+  if (!/^[1-9][0-9]$/.test(dd)) return false;
+  if (rest.length === 9) return rest.startsWith("9");
+  if (rest.length === 8) return /^[2-5]/.test(rest);
+  return false;
+}
