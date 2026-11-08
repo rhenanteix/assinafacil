@@ -1,4 +1,5 @@
 "use client";
+import posthog from "posthog-js";
 import { useTranslation } from "@/lib/i18n/client";
 
 import { useEffect, useRef } from "react";
@@ -17,15 +18,21 @@ import { jsonRequest, useSignatureActions } from "@/hooks/use-signature-actions"
 import { clearDraft, storeAuthDraft, useSignatureDraft } from "@/hooks/use-signature-draft";
 import { track } from "@/lib/posthog-client";
 
-export function SignatureBuilder({ initial = emptySignature, pro = false, signedIn = false, needsVerification = false, owned = [], id }: {
-  initial?: SignatureData; pro?: boolean; signedIn?: boolean; needsVerification?: boolean; owned?: string[]; id?: string;
+export function SignatureBuilder({ initial = emptySignature, pro = false, signedIn = false, needsVerification = false, owned = [], id, restoreDraft = true }: {
+  initial?: SignatureData; pro?: boolean; signedIn?: boolean; needsVerification?: boolean; owned?: string[]; id?: string; restoreDraft?: boolean;
 }) {
   const t = useTranslation();
   const router = useRouter();
   const capture = useRef<HTMLDivElement>(null);
   const savedId = useRef(id);
+  const generatorTracked = useRef(false);
+  useEffect(() => {
+    if (generatorTracked.current) return;
+    generatorTracked.current = true;
+    posthog.capture("generator_visited", { signed_in: signedIn });
+  }, [signedIn]);
   const form = useForm<SignatureData>({ defaultValues: initial, resolver: zodResolver(signatureSchema) });
-  useSignatureDraft(form, !id, { pro, owned });
+  useSignatureDraft(form, !id && restoreDraft, { pro, owned });
   const data = { ...initial, ...useWatch({ control: form.control }) };
   const lockedTemplate = !canUseTemplate(data.template, pro, owned);
   const premium = !lockedTemplate && (pro || owned.includes(data.template));
@@ -45,6 +52,7 @@ export function SignatureBuilder({ initial = emptySignature, pro = false, signed
       if (lockedTemplate) throw new Error(t("Escolha um template disponível na sua conta."));
       if (!signedIn) { signIn(value); return; }
       await operation(value);
+      posthog.capture(action === "copy" ? "signature_copied" : action === "png" ? "signature_downloaded" : "signature_saved", { template: value.template, premium });
     }), () => toast.error(t("Confira os campos indicados.")));
   async function upload(kind: "photo" | "logo", file?: File) {
     if (!file) return;
@@ -98,6 +106,7 @@ export function SignatureBuilder({ initial = emptySignature, pro = false, signed
         {lockedTemplate ? <p className="text-sm text-slate-700">{t("Veja os exemplos deste modelo na")}{" "}<Link className="text-brand underline" href="/#modelos">{t("galeria")}</Link>{t(". Para usar seus dados nele,")}{" "}<Link className="text-brand underline" href="/precos">{t("desbloqueie o modelo")}</Link>.</p> :
           <SignaturePreview data={data} premium={premium} capture={capture} />}
       </div>
+      {!premium && <p className="rounded-xl border border-violet-200 bg-violet-50 p-3 text-sm text-violet-900">Sua assinatura Free leva um pequeno link Maily. <Link href="/precos" className="font-semibold underline">Com o Pro, só a sua marca aparece</Link>: cores, foto, logo e 12 modelos por pagamento único.</p>}
       {!signedIn && <p className="text-sm text-slate-700">{needsVerification ? t("Confirme seu e-mail") : t("Crie sua conta gratuita")} {" "}{t("para salvar e baixar. Seus dados preenchidos acompanham o cadastro.")}</p>}
       <div className="flex flex-wrap gap-2" aria-busy={!!busy}>
         <Button type="button" disabled={!!busy || lockedTemplate} onClick={submit("copy", async value => {

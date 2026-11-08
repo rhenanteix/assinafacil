@@ -1,5 +1,3 @@
-import { getTranslator } from "@/lib/i18n/server";
-import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { SignatureBuilder } from "@/components/signature/SignatureBuilder";
 import { DeleteSignature, SignOutButton } from "@/components/shared/DashboardActions";
@@ -8,13 +6,11 @@ import { TrackedLink } from "@/components/shared/TrackedLink";
 import { currentAccount } from "@/lib/auth";
 import { db } from "@/lib/prisma";
 import { signatureAccess } from "@/lib/prisma/signatures";
-import { canUseTemplate, signatureSchema, toEssential } from "@/types/signature";
-export async function generateMetadata() {
-  const t = await getTranslator();
-  return { title: t("Minhas assinaturas"), robots: { index: false } };
-}
-export default async function Dashboard({ searchParams }: { searchParams: Promise<{ editar?: string; pagamento?: string }> }) {
-  const t = await getTranslator();
+import { signatureSchema } from "@/types/signature";
+import { workspaceSchema } from "@/lib/workspace";
+import { WorkspaceDashboard } from "@/components/dashboard/WorkspaceDashboard";
+export const metadata = { title: "Meu espaço", robots: { index: false } };
+export default async function Dashboard({ searchParams }: { searchParams: Promise<{ editar?: string; pagamento?: string; nova?: string }> }) {
   const account = await currentAccount();
   if (!account) redirect("/login");
   if (!account.emailVerified) redirect("/verificar-email");

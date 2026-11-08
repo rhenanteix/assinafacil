@@ -1,3 +1,4 @@
+import { sendPaymentReceipt } from "@/lib/email/receipt";
 import { mercadoPago, verifyWebhook } from "@/lib/mercado-pago";
 import { isPlan, plans } from "@/lib/payments/plans";
 import { db } from "@/lib/prisma";
@@ -42,6 +43,7 @@ export async function POST(request: Request) {
       const expiresAt = plan.days === null ? null : current.expiresAt ?? new Date(Math.max(approved, active?.expiresAt?.getTime() ?? 0) + plan.days * 86400000);
       await tx.order.update({ where: { id: order.id }, data: { status, paymentId: id, expiresAt } });
     });
+    if (status === "approved") await sendPaymentReceipt(order.id);
     return Response.json({ ok: true });
   } catch { return failure("Não foi possível processar a notificação.", 503); }
 }

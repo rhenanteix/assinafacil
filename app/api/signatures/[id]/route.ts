@@ -1,3 +1,4 @@
+import { canAssignFolder } from "@/lib/signature/folders";
 import { prepareSignature } from "@/lib/signature/access";
 import { verifiedUserId } from "@/lib/auth";
 import { db } from "@/lib/prisma";
@@ -16,7 +17,9 @@ export async function PATCH(request: Request, { params }: Context) {
   if (!parsed.success) return failure("Dados da assinatura inválidos.", 400);
   const result = await db.$transaction(async tx => {
     await lockUser(tx, userId);
-    const signature = prepareSignature(parsed.data, await signatureAccess(userId, tx));
+    const access = await signatureAccess(userId, tx);
+    if (!await canAssignFolder(tx, userId, parsed.data.folderId, access.business)) return failure("Área indisponível para esta conta.", 403);
+    const signature = prepareSignature(parsed.data, access);
     if (!signature) return failure("Este template precisa ser desbloqueado.", 403);
     const updated = await tx.signature.updateMany({ where: { id, userId }, data: { data: signature.data } });
     return updated.count ? true : failure("Assinatura não encontrada.", 404);

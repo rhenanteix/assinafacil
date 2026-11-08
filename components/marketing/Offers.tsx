@@ -1,3 +1,5 @@
+import { commercialInfo } from "@/lib/commercial";
+import { PaymentTrust } from "@/components/payments/PaymentTrust";
 import { getTranslator, getLocale } from "@/lib/i18n/server";
 import Link from "next/link";
 import { Check } from "lucide-react";
@@ -9,19 +11,20 @@ import { checkoutEnabled } from "@/lib/abacatepay/config";
 import { PlanViewTracker } from "@/components/shared/PlanViewTracker";
 
 export async function BusinessLink() {
-  return <BusinessContact enabled={Boolean(process.env.RESEND_API_KEY && process.env.VERIFICATION_FROM_EMAIL && process.env.BUSINESS_CONTACT_EMAIL && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(process.env.BUSINESS_CONTACT_EMAIL))} />;
+  return <BusinessContact contactEmail={commercialInfo().businessEmail} enabled={Boolean(process.env.RESEND_API_KEY && process.env.VERIFICATION_FROM_EMAIL && process.env.BUSINESS_CONTACT_EMAIL && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(process.env.BUSINESS_CONTACT_EMAIL))} />;
 }
 
 export async function OfferButton({ plan, signedIn }: { plan: Plan; signedIn: boolean }) {
   const t = await getTranslator();
   return checkoutEnabled()
-    ? <div className="space-y-2"><CheckoutButton plan={plan} signedIn={signedIn} label={plan === "lifetime" ? t("Comprar Pro") : t("Comprar modelo")} /><p className="text-xs text-slate-600">{t("Pagamento único, sem mensalidade")}</p></div>
+    ? <div className="space-y-2"><CheckoutButton plan={plan} signedIn={signedIn} label={plan === "lifetime" ? t("Comprar Pro") : t("Comprar modelo")} /><p className="text-xs text-slate-600">{t("Pagamento único, sem mensalidade")}</p><PaymentTrust /></div>
     : <p className="text-sm font-medium text-slate-600">{t("Compra online em breve.")}</p>;
 }
 
 export async function Offers({ signedIn = false }: { signedIn?: boolean }) {
   const locale = await getLocale();
   const t = await getTranslator();
+  const business = commercialInfo().businessBase;
   return <div className="grid gap-4 lg:grid-cols-3">
     {[
       { title: "Free", value: price(0, locale), note: t("Para criar sua primeira assinatura"), items: [t("Modelo Essencial com cor e layout fixos"), t("Uma assinatura salva · cadastro confirmado"), t("HTML e PNG com marca Maily"), t("Contatos clicáveis no HTML")] },
