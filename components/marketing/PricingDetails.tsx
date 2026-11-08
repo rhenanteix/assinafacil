@@ -34,7 +34,11 @@ export function BusinessContact({ enabled, contactEmail }: { enabled: boolean; c
     <Button variant="outline" onClick={() => { dialog.current?.showModal(); }}>{t("Falar com a equipe")}</Button>
     <dialog ref={dialog} aria-labelledby="business-title" className="w-[calc(100%-2rem)] max-w-lg rounded-2xl p-6 backdrop:bg-slate-950/60">
       <div className="mb-5 flex items-center justify-between gap-3"><h2 id="business-title" className="text-xl font-bold">{t("Falar com a equipe")}</h2><button type="button" className="underline" onClick={() => dialog.current?.close()}>{t("Fechar")}</button></div>
-      {contactEmail && <p className="mb-4 text-sm text-slate-600">Business: R$ 89,90 inicial + R$ 9,90/mês por empresa, equipe sem limite. A contratação é confirmada pela equipe; este formulário não gera cobrança. Sua solicitação vai para <a className="text-brand underline" href={`mailto:${contactEmail}`}>{contactEmail}</a>. Você também pode escrever diretamente.</p>}
+      {contactEmail && <div className="mb-4 space-y-2 text-sm text-slate-600">
+        <p><strong>Business (contratação com a equipe, sem cobrança automática por este site):</strong> assinatura padronizada para a sua equipe, entregue pronta.</p>
+        <p><strong>Valores de referência (iniciais, sujeitos a confirmação):</strong> implantação/1º mês R$ 89,90 por empresa; meses seguintes R$ 19,90/mês por empresa, equipe sem limite de pessoas. Enquanto a recorrência automática não estiver ativa, os meses seguintes são cobrados/ajustados manualmente com a equipe. Este formulário <strong>não gera cobrança</strong>.</p>
+        <p>Pagamento em dólar (USD): sob consulta e verificação do provedor — Pix e boleto não funcionam em USD. Sua solicitação vai para <a className="text-brand underline" href={`mailto:${contactEmail}`}>{contactEmail}</a>. Você também pode escrever diretamente.</p>
+      </div>}
       <form className="space-y-4" onSubmit={async event => {
         event.preventDefault();
         if (!enabled || sending.current) return;

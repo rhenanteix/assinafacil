@@ -10,6 +10,8 @@ import { Reveal } from "@/components/marketing/Reveal";
 import { Offers, BusinessLink } from "@/components/marketing/Offers";
 import { renderSignature } from "@/lib/utils/signature";
 import { demoDemos, templates } from "@/types/signature";
+import { professionPacksEnabled } from "@/lib/feature-flags";
+import { ProfessionGallery } from "@/components/marketing/ProfessionGallery";
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslator();
@@ -54,8 +56,8 @@ export default async function Home() {
       </Reveal>)}</div>
     </section>
     <section id="modelos" className="scroll-mt-8 border-y border-violet-100 bg-[#f1eeff] py-16 sm:py-20">
-      <div className="shell"><p className="eyebrow flex items-center gap-2"><LayoutTemplate size={16} /> {" "}{t("Galeria")}</p><h2 className="mt-3 text-4xl font-bold tracking-tight sm:text-5xl">{t("Um modelo para cada tipo de negócio")}</h2><p className="mb-8 mt-3 text-slate-700">{t("Exemplos Pro com o essencial. Você escolhe o que adicionar.")}</p>
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">{examples.map(id => {
+      <div className="shell"><p className="eyebrow flex items-center gap-2"><LayoutTemplate size={16} /> {" "}{t("Galeria")}</p><h2 className="mt-3 text-4xl font-bold tracking-tight sm:text-5xl">{t("Um modelo para cada tipo de negócio")}</h2><p className="mb-8 mt-3 text-slate-700">{professionPacksEnabled() ? t("Escolha sua profissão ou explore os modelos.") : t("Exemplos Pro com o essencial. Você escolhe o que adicionar.")}</p>
+        {professionPacksEnabled() ? <ProfessionGallery /> : <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">{examples.map(id => {
           const demo = demoDemos[id];
           const template = templates.find(item => item.id === id)!;
           const tier = "exclusive" in template ? t("Exclusivo") : template.pro ? "Pro" : "Free";
@@ -63,7 +65,7 @@ export default async function Home() {
           return <Reveal key={id} className="panel transition-shadow hover:shadow-lg"><div className="mb-4 flex items-center justify-between gap-2"><h3 className="font-bold">{t(template.label)}</h3><span className="rounded-full bg-violet-100 px-2.5 py-1 text-xs font-bold text-brand">{tier}</span></div>
             <div className="min-h-36 rounded-xl border border-slate-100 p-2" dangerouslySetInnerHTML={{ __html: renderSignature({ ...demo, role: t(demo.role), company: t(demo.company), template: id, color }, template.pro, locale) }} />
           </Reveal>;
-        })}</div>
+        })}</div>}
         <div className="mt-6 flex flex-wrap gap-3"><Button asChild><Link href="/gerador">{t("Experimentar no gerador")}{" "}<ArrowRight size={16} /></Link></Button><Button asChild variant="outline"><Link href="/precos#exclusivos">{t("Ver modelos exclusivos")}</Link></Button></div></div>
     </section>
     <section className="shell py-12">
