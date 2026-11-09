@@ -14,3 +14,12 @@ export function whatsappUrl(value: string) {
   } catch { /* Invalid URL. */ }
   return null;
 }
+
+/** Gera link wa.me com número brasileiro normalizado e mensagem pré-preenchida codificada em URL. */
+export function whatsappLink(numero: string, mensagem?: string) {
+  const d = numero.replace(/\D/g, "");
+  if (!/^[1-9]\d{9,14}$/.test(d)) return null;
+  const base = `https://wa.me/${d}`;
+  if (!mensagem?.trim()) return base;
+  return `${base}?text=${encodeURIComponent(mensagem.trim())}`;
+}

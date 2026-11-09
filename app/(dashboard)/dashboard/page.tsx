@@ -1,119 +1,55 @@
 import { notFound, redirect } from "next/navigation";
-import { SignatureBuilder } from "@/components/signature/SignatureBuilder";
-import { DeleteSignature, SignOutButton } from "@/components/shared/DashboardActions";
-import { Button } from "@/components/ui/button";
-import { TrackedLink } from "@/components/shared/TrackedLink";
+import { WorkspaceDashboard } from "@/components/dashboard/WorkspaceDashboard";
 import { currentAccount } from "@/lib/auth";
 import { db } from "@/lib/prisma";
 import { signatureAccess } from "@/lib/prisma/signatures";
-import { getTranslator } from "@/lib/i18n/server";
-import { canUseTemplate, signatureSchema, toEssential } from "@/types/signature";
+import { workspaceSchema } from "@/lib/workspace";
+import { signatureSchema } from "@/types/signature";
 
 export const metadata = { title: "Meu espaço", robots: { index: false } };
 
 export default async function Dashboard({
   searchParams,
 }: {
-  searchParams: Promise<{ editar?: string; pagamento?: string; nova?: string }>;
+  searchParams: Promise<{ editar?: string; pagamento?: string; nova?: string; salva?: string }>;
 }) {
   const account = await currentAccount();
   if (!account) redirect("/login");
   if (!account.emailVerified) redirect("/verificar-email");
 
-  const t = await getTranslator();
-  const userId = account.id;
-  const { editar, pagamento } = await searchParams;
-  const [{ pro, owned }, rows] = await Promise.all([
-    signatureAccess(userId),
-    db.signature.findMany({ where: { userId }, orderBy: { updatedAt: "desc" } }),
+  const [{ editar, pagamento, nova, salva }, access, rows, user] = await Promise.all([
+    searchParams,
+    signatureAccess(account.id),
+    db.signature.findMany({
+      where: { userId: account.id },
+      orderBy: { updatedAt: "desc" },
+    }),
+    db.user.findUnique({
+      where: { id: account.id },
+      select: { workspace: true, name: true },
+    }),
   ]);
-  const signatures = rows.flatMap((row) => {
-    const result = signatureSchema.safeParse(row.data);
-    return result.success ? [{ id: row.id, data: result.data }] : [];
+
+  const signatures = rows.flatMap(row => {
+    const parsed = signatureSchema.safeParse(row.data);
+    return parsed.success ? [{ id: row.id, data: parsed.data }] : [];
   });
-  const selected = signatures.find((row) => row.id === editar);
-  if (editar && !selected) notFound();
+
+  if (editar && !signatures.some(row => row.id === editar)) notFound();
+
+  const parsedWorkspace = workspaceSchema.safeParse(user?.workspace);
 
   return (
-    <div className="shell py-10">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <p className="eyebrow">{t("Plano")} {pro ? "Pro" : "Free"}</p>
-          <h1 className="mt-2 text-4xl font-bold">{t("Minhas assinaturas")}</h1>
-        </div>
-        <div className="flex gap-2">
-          {!pro && (
-            <Button asChild variant="outline">
-              <TrackedLink
-                event="cta_clicked"
-                properties={{ cta_label: t("Conhecer o Pro"), cta_location: "dashboard", destination: "/precos" }}
-                linkProps={{ href: "/precos" }}
-              >
-                {t("Conhecer o Pro")}
-              </TrackedLink>
-            </Button>
-          )}
-          <SignOutButton />
-        </div>
-      </div>
-      {pagamento && (
-        <p role="status" className="mt-5 rounded-xl bg-indigo-100 p-4 text-sm">
-          {pagamento === "falhou"
-            ? t("O checkout não foi concluído.")
-            : t("A confirmação do pagamento é automática. Atualize a página para conferir os recursos liberados.")}
-        </p>
-      )}
-      <section className="panel my-6" aria-label={t("Assinaturas salvas")}>
-        {signatures.length ? (
-          <ul className="divide-y divide-slate-100">
-            {signatures.map(({ id, data }) => (
-              <li key={id} className="flex flex-wrap items-center justify-between gap-2 py-2">
-                <span className="max-w-full break-all font-semibold">{data.name}</span>
-                <div className="flex gap-2">
-                  <Button asChild variant="outline">
-                    <TrackedLink
-                      event="cta_clicked"
-                      properties={{ cta_label: t("Editar"), cta_location: "dashboard", destination: `/dashboard?editar=${id}` }}
-                      linkProps={{ href: `/dashboard?editar=${id}` }}
-                    >
-                      {t("Editar")}
-                    </TrackedLink>
-                  </Button>
-                  <DeleteSignature id={id} name={data.name} />
-                </div>
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <p className="text-slate-600">{t("Sua primeira assinatura vai aparecer aqui depois de salva.")}</p>
-        )}
-        {pro && !!signatures.length && (
-          <Button asChild className="mt-3">
-            <TrackedLink
-              event="cta_clicked"
-              properties={{ cta_label: t("Nova assinatura"), cta_location: "dashboard", destination: "/dashboard" }}
-              linkProps={{ href: "/dashboard" }}
-            >
-              {t("Nova assinatura")}
-            </TrackedLink>
-          </Button>
-        )}
-      </section>
-      {selected && !canUseTemplate(selected.data.template, pro, owned) && (
-        <p className="mb-4 text-sm text-slate-700">
-          {t("O modelo salvo exige acesso premium. A prévia mostra como os dados ficam no Essencial. Salve se quiser substituir a versão anterior.")}
-        </p>
-      )}
-      {(selected || pro || !signatures.length) && (
-        <SignatureBuilder
-          key={selected?.id ?? "new"}
-          signedIn
-          pro={pro}
-          owned={owned}
-          id={selected?.id}
-          initial={selected && (canUseTemplate(selected.data.template, pro, owned) ? selected.data : toEssential(selected.data))}
-        />
-      )}
-    </div>
+    <WorkspaceDashboard
+      name={user?.name ?? ""}
+      email={account.email ?? ""}
+      {...access}
+      signatures={signatures}
+      workspace={parsedWorkspace.success ? parsedWorkspace.data : null}
+      edit={editar}
+      creating={nova === "1"}
+      payment={pagamento}
+      saved={salva === "1"}
+    />
   );
 }

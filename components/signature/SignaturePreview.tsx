@@ -5,8 +5,8 @@ import { useEffect, useState, type RefObject } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import { basicSignatureSchema, signatureSchema, type SignatureData } from "@/types/signature";
 
-export function SignaturePreview({ data, premium, capture }: {
-  data: SignatureData; premium: boolean; capture: RefObject<HTMLDivElement | null>;
+export function SignaturePreview({ data, premium, capture, publicPreview = false }: {
+  data: SignatureData; premium: boolean; capture: RefObject<HTMLDivElement | null>; publicPreview?: boolean;
 }) {
   const t = useTranslation();
   const locale = useLocale();
@@ -26,14 +26,14 @@ export function SignaturePreview({ data, premium, capture }: {
     const timer = setTimeout(async () => {
       try {
         setError("");
-        const response = await fetch(premium ? "/api/signatures/preview" : "/api/preview", {
+        const response = await fetch(publicPreview ? "/api/signatures/preview-public" : premium ? "/api/signatures/preview" : "/api/preview", {
           method: "POST", headers: { "Content-Type": "application/json" }, body, signal: controller.signal,
         });
         if (!response.ok) {
           const result = await response.json().catch(() => null);
           throw new Error(result?.error ?? t("Não foi possível carregar a prévia."));
         }
-        if (premium) {
+        if (publicPreview || premium) {
           const result = await response.json() as { html: string };
           if (!controller.signal.aborted) setPreview({ html: result.html, request: requestKey });
         } else {
@@ -47,7 +47,7 @@ export function SignaturePreview({ data, premium, capture }: {
       }
     }, 220);
     return () => { clearTimeout(timer); controller.abort(); if (objectUrl) URL.revokeObjectURL(objectUrl); };
-  }, [body, premium, t, requestKey]);
+  }, [body, premium, publicPreview, t, requestKey]);
 
   const current = preview?.request === requestKey;
   return <div className="max-w-full" aria-busy={!current && !error}>

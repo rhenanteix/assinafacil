@@ -7,4 +7,6 @@ export const socialNetworks = [
   { key: "tiktok", label: "TikTok", domains: ["tiktok.com"], color: "#151515" },
   { key: "x", label: "X", domains: ["x.com", "twitter.com"], color: "#151515" },
   { key: "github", label: "GitHub", domains: ["github.com"], color: "#24292F" },
+  { key: "behance", label: "Behance", domains: ["behance.net"], color: "#1769ff", textIcon: "Be" },
+  { key: "dribbble", label: "Dribbble", domains: ["dribbble.com"], color: "#ea4c89", textIcon: "Dr" },
 ] as const;
