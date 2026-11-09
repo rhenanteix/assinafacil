@@ -8,6 +8,7 @@ import { CheckoutButton } from "@/components/shared/CheckoutButton";
 import { plans, price, type Plan } from "@/lib/payments/plans";
 import { BusinessContact } from "@/components/marketing/PricingDetails";
 import { checkoutEnabled } from "@/lib/abacatepay/config";
+import { PlanViewTracker } from "@/components/shared/PlanViewTracker";
 
 export async function BusinessLink() {
   return <BusinessContact contactEmail={commercialInfo().businessEmail} enabled={Boolean(process.env.RESEND_API_KEY && process.env.VERIFICATION_FROM_EMAIL && process.env.BUSINESS_CONTACT_EMAIL && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(process.env.BUSINESS_CONTACT_EMAIL))} />;
@@ -33,6 +34,7 @@ export async function Offers({ signedIn = false }: { signedIn?: boolean }) {
       <div><p className="eyebrow">{plan.title}</p><h3 className="mt-3 text-4xl font-bold tracking-tight">{plan.value}</h3><p className="mt-2 text-sm text-slate-600">{plan.note}</p></div>
       <ul className="flex-1 space-y-3 text-sm">{plan.items.map(item => <li className="flex items-start gap-2" key={item}><Check size={16} className="mt-0.5 shrink-0 text-brand" />{item}</li>)}</ul>
       {plan.title === "Free" ? <Button asChild variant="outline"><Link href="/gerador">{t("Criar grátis")}</Link></Button> : plan.title === "Pro" ? <OfferButton plan="lifetime" signedIn={signedIn} /> : <BusinessLink />}
-    </article>)}
+    </article></PlanViewTracker>;
+    })}
   </div>;
 }

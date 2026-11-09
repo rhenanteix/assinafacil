@@ -22,9 +22,13 @@ export function AuthForm({ register = false, google, destination, embedded = fal
     <form className="space-y-4" onSubmit={event => {
       event.preventDefault();
       const values = Object.fromEntries(new FormData(event.currentTarget));
+      const method = "credentials";
+      if (register) track("register_started", { method, destination });
+      else track("login_started", { method, destination });
       void run("auth", async () => {
+        let verificationSent = false;
         if (register) {
-          const { verificationSent } = await jsonRequest<{ verificationSent: boolean }>("/api/register", {
+          const { verificationSent: sent } = await jsonRequest<{ verificationSent: boolean }>("/api/register", {
             method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...values, destination }),
           });
           posthog.capture("signup_completed", { destination, ...(readDraftMeta()?.utm ?? {}) });
@@ -33,10 +37,14 @@ export function AuthForm({ register = false, google, destination, embedded = fal
         }
         const result = await signIn("credentials", { ...values, redirect: false });
         if (!result?.ok) {
+          track("login_failed", { method, reason: "invalid_credentials" });
           if (register) { router.replace("/login" + suffix); return; }
           throw new Error(t("Confira seu e-mail e sua senha."));
         }
-        if (!register) toast.success(t("Você entrou com sucesso."));
+        if (!register) {
+          track("login_completed", { method, email_verified: false, destination });
+          toast.success(t("Você entrou com sucesso."));
+        }
         router.replace("/verificar-email" + suffix);
         router.refresh();
       });

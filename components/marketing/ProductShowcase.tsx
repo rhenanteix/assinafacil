@@ -1,7 +1,6 @@
 "use client";
 import { useTranslation } from "@/lib/i18n/client";
 
-
 import { useRef, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
@@ -9,6 +8,7 @@ import { motion, useReducedMotion } from "framer-motion";
 import { Mail } from "lucide-react";
 import { SignaturePreview } from "@/components/signature/SignaturePreview";
 import { emptySignature } from "@/types/signature";
+import { track } from "@/lib/posthog-client";
 
 export function ProductShowcase() {
   const t = useTranslation();
@@ -29,7 +29,7 @@ export function ProductShowcase() {
         <div className="grid min-h-48 place-items-center overflow-hidden rounded-2xl border border-dashed border-violet-200 bg-white p-3">
           <SignaturePreview data={{ ...emptySignature, name, role: t("Diretora de Design"), company: t("Estúdio Horizonte"), email: "marina@estudiohorizonte.com.br" }} premium={false} capture={capture} />
         </div>
-        <label className="grid gap-2 rounded-xl bg-white p-3 text-xs font-semibold">{t("Experimente com seu nome")}{" "}<input value={name} onChange={e => setName(e.target.value)} maxLength={60} className="min-w-0 rounded-lg border border-slate-300 px-2 py-2 text-sm" />
+        <label className="grid gap-2 rounded-xl bg-white p-3 text-xs font-semibold">{t("Experimente com seu nome")}{" "}<input value={name} onChange={(e) => { setName(e.target.value); track("field_edited", { field: "name" }); }} maxLength={60} className="min-w-0 rounded-lg border border-slate-300 px-2 py-2 text-sm" />
         </label>
         <p className="flex items-start gap-2 text-sm text-slate-700"><span>{t("HTML clicável, também no Free.")}{" "}<Link href="/precos" className="font-semibold text-brand underline">{t("Conheça os modelos com logo e ícones sociais.")}</Link></span></p>
       </div>

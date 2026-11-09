@@ -1,6 +1,7 @@
 "use client";
 
 import posthog from "posthog-js";
+import type { AnalyticsEventName, AnalyticsProperties } from "@/lib/analytics/events";
 
 let initialized = false;
 
@@ -31,6 +32,68 @@ export function initPostHog() {
     debug: process.env.NODE_ENV === "development",
   });
   initialized = true;
+}
+
+/**
+ * Dispara um evento customizado no PostHog.
+ * @param event Nome do evento (convenção categoria_acao, veja lib/analytics/events.ts).
+ * @param properties Propriedades do evento (opcional).
+ */
+export function track(event: AnalyticsEventName | string, properties?: AnalyticsProperties) {
+  if (typeof window === "undefined") return;
+  try {
+    posthog.capture(event, properties);
+  } catch {
+    // Analytics nunca deve quebrar a experiência do usuário.
+  }
+}
+
+/**
+ * Dispara um page view manual com propriedades ricas (caminho, título, tier do usuário).
+ */
+export function trackPageView(properties: {
+  path?: string;
+  title?: string;
+  query?: string;
+  internal_referer?: string;
+  signed_in?: boolean;
+  user_tier?: "free" | "pro" | "business";
+}) {
+  track("page_viewed", {
+    path: properties.path ?? typeof window !== "undefined" ? window.location.pathname : undefined,
+    title: properties.title ?? typeof document !== "undefined" ? document.title : undefined,
+    query: properties.query,
+    internal_referer: properties.internal_referer,
+    signed_in: properties.signed_in,
+    user_tier: properties.user_tier,
+  });
+}
+
+/**
+ * Identifica um usuário no PostHog com id e propriedades de perfil.
+ */
+export function identifyUser(
+  userId: string,
+  properties?: { email?: string | null; name?: string | null; [key: string]: string | number | boolean | null | undefined },
+) {
+  if (typeof window === "undefined") return;
+  try {
+    posthog.identify(userId, properties);
+  } catch {
+    // Analytics nunca deve quebrar a experiência do usuário.
+  }
+}
+
+/**
+ * Reseta a identidade do usuário (ex: logout).
+ */
+export function resetUser() {
+  if (typeof window === "undefined") return;
+  try {
+    posthog.reset();
+  } catch {
+    // Ignorar.
+  }
 }
 
 export { posthog };
