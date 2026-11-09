@@ -34,7 +34,7 @@ export async function POST(request: Request) {
     await captureServerEvent({
       distinctId: userId,
       event: "signature_exported",
-      properties: { format, premium: signature.premium },
+      properties: { format, premium: signature.premium, uses_blocos: Boolean(signature.data.templateBlocos || signature.data.blocos), template_blocos_id: signature.data.templateBlocos ?? null },
     });
     return Response.json({ html: renderSignature(signature.data, signature.premium, await getLocale(), new URL(request.url).origin) }, { headers: privateHeaders });
   }
@@ -60,7 +60,7 @@ export async function POST(request: Request) {
   await captureServerEvent({
     distinctId: userId,
     event: "signature_exported",
-    properties: { format, premium: signature.premium },
+    properties: { format, premium: signature.premium, uses_blocos: Boolean(signature.data.templateBlocos || signature.data.blocos), template_blocos_id: signature.data.templateBlocos ?? null },
   });
   return new Response(new Uint8Array(png), {
     headers: { ...privateHeaders, "Content-Type": "image/png", "Content-Disposition": 'attachment; filename="assinatura.png"', "X-Signature-Id": result },

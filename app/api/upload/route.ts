@@ -24,13 +24,14 @@ export async function POST(request: Request) {
   const webp = bytes.toString("ascii", 0, 4) === "RIFF" && bytes.toString("ascii", 8, 12) === "WEBP";
   if (!png && !jpeg && !webp) return failure("Use uma imagem PNG, JPEG ou WebP.", 400);
   const kind = body?.get("kind");
-  if (kind !== "photo" && kind !== "logo") return failure("Tipo de imagem inválido.", 400);
+  if (kind !== "photo" && kind !== "logo" && kind !== "banner" && kind !== "selos" && kind !== "galeria") return failure("Tipo de imagem inválido.", 400);
   try {
     const prepared = await prepareSignatureImage(bytes, kind);
+    const transform = kind === "banner" ? [{ width: 600, height: 200, crop: "limit" }] : [{ width: 256, height: 256, crop: "limit" }];
     const url = await new Promise<string>((resolve, reject) => {
       cloudinary.uploader.upload_stream({
         resource_type: "image", folder: "assinafacil", allowed_formats: ["png", "jpg", "jpeg", "webp"],
-        transformation: [{ width: 256, height: 256, crop: "limit" }], format: "png",
+        transformation: transform, format: "png",
       }, (error, result) => {
         if (error || !result) reject(error ?? new Error("Upload sem retorno."));
         else resolve(result.secure_url);

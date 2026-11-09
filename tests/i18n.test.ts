@@ -22,7 +22,7 @@ test("English exports translate built-in copy without changing personal details"
   const en = renderSignature(data, false, "en");
   assert.match(en, /PROFESSIONAL CONTACT/);
   assert.match(en, /Created with Maily/);
-  assert.match(en, /João/);
+  assert.match(en, /Jo&#227;/);
   assert.match(en, /Diretor/);
   assert.doesNotMatch(en, /CONTATO PROFISSIONAL|Criado com/);
   assert.match(renderSignature(data, false), /CONTATO PROFISSIONAL/);

@@ -17,6 +17,7 @@ import { emptySignature, signatureSchema, canUseTemplate, type SignatureData, te
 import { jsonRequest, useSignatureActions } from "@/hooks/use-signature-actions";
 import { clearDraft, storeAuthDraft, useSignatureDraft } from "@/hooks/use-signature-draft";
 import { track } from "@/lib/posthog-client";
+import { listModelosBlocos, getModeloBlocos } from "@/lib/blocks/registry";
 
 export function SignatureBuilder({ initial = emptySignature, pro = false, signedIn = false, needsVerification = false, owned = [], id, restoreDraft = true }: {
   initial?: SignatureData; pro?: boolean; signedIn?: boolean; needsVerification?: boolean; owned?: string[]; id?: string; restoreDraft?: boolean;
@@ -40,6 +41,19 @@ export function SignatureBuilder({ initial = emptySignature, pro = false, signed
   useEffect(() => {
     track("editor_opened", { signed_in: !!signedIn, user_tier: pro ? "pro" : "free", editing_existing: !!id });
   }, [signedIn, pro, id]);
+
+  useEffect(() => {
+    const modelo = listModelosBlocos().find(m => m.id === data.template);
+    if (modelo && !data.templateBlocos && !data.blocos) {
+      form.setValue("templateBlocos", modelo.id, { shouldDirty: true });
+      form.setValue("blocos", JSON.stringify(modelo.blocos), { shouldDirty: true });
+      track("template_blocos_loaded", { template: data.template });
+    }
+    if (!modelo && (data.templateBlocos || data.blocos)) {
+      form.setValue("templateBlocos", undefined, { shouldDirty: true });
+      form.setValue("blocos", undefined, { shouldDirty: true });
+    }
+  }, [data.template, form, data.templateBlocos, data.blocos]);
   function signIn(value: SignatureData) {
     if (!storeAuthDraft(value)) {
       toast.error(t("Seu navegador bloqueou o armazenamento do rascunho. Habilite-o antes de entrar para manter os dados."));

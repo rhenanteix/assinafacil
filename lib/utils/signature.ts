@@ -4,9 +4,12 @@ import { whatsappUrl, whatsappLink } from "@/types/whatsapp";
 import { renderSocialIcons } from "@/lib/signature/icons";
 import { emptySignature, type SignatureData } from "@/types/signature";
 import { formatarRegistro } from "@/lib/professions/registries";
+import { renderBlocosHtml } from "@/lib/blocks/render";
+import { getModeloBlocos, type Bloco } from "@/lib/blocks/registry";
 
 const escape = (value: string) => value.replace(/[&<>"']/g, (char) =>
-  ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[char] ?? char);
+  ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[char] ?? char)
+  .replace(/[\u0080-\uFFFF]/g, (ch) => `&#${ch.charCodeAt(0)};`);
 const safeUrl = (value: string) => {
   try { const url = new URL(value); return url.protocol === "https:" ? escape(url.href) : ""; }
   catch { return ""; }
@@ -24,6 +27,17 @@ const picture = (url: string, alt: string, size: number, radius: string) => safe
   `<img src="${safeUrl(url)}" alt="${escape(alt)}" width="${size}" height="${size}" style="display:block;width:${size}px;height:${size}px;border-radius:${radius};border:0">` : "";
 
 export function renderSignature(data: SignatureData, pro: boolean, locale: Locale = "pt-BR", assetBase?: string) {
+  const blocosRaw = data.templateBlocos || (data.blocos ? (() => { try { return JSON.parse(data.blocos); } catch { return null; } })() : null);
+  if (Array.isArray(blocosRaw) && blocosRaw.length) {
+    const modelo = getModeloBlocos(data.templateBlocos ?? "");
+    const d: Record<string, unknown> = data as unknown as Record<string, unknown>;
+    return renderBlocosHtml(
+      { cor: modelo?.cor ?? data.color, serif: !!modelo?.serif, compativel: modelo?.compativel ?? data.modoCompativel },
+      blocosRaw as Bloco[],
+      d,
+      locale,
+    ).html;
+  }
   data = { ...emptySignature, ...data };
   const t = translator(locale);
   const theme = /^#[0-9a-f]{6}$/i.test(data.color) ? data.color : "#5b45db";
@@ -75,11 +89,11 @@ export function renderSignature(data: SignatureData, pro: boolean, locale: Local
 
   const banner = data.template === "banner" || brandDesk || data.template === "property" ? `<tr><td colspan="3" style="background:${theme};color:${onTheme};padding:7px 12px;font-weight:bold;font-size:12px">${escape(data.company || t("Vamos conversar?"))}</td></tr>` : "";
   const acquisitionUrl = new URL("/?utm_source=signature&utm_medium=email&utm_campaign=free", publicSiteUrl() ?? "https://maily.com.br").href;
-  const watermark = pro ? "" : `<tr><td colspan="3" style="padding:6px 12px;font-size:10px;color:#526078"><a href="${acquisitionUrl}" target="_blank" rel="noopener noreferrer" style="color:#69519a;text-decoration:none;font-family:Arial,sans-serif;font-size:10px;">${t("Criado com Maily")} · Crie sua assinatura</a></td></tr>`;
+  const watermark = pro ? "" : `<tr><td colspan="3" style="padding:6px 12px;font-size:10px;color:#526078"><a href="${acquisitionUrl}" target="_blank" rel="noopener noreferrer" style="color:#69519a;text-decoration:none;font-family:Arial,sans-serif;font-size:10px;">${escape(t("Criado com Maily"))} &#183; Crie sua assinatura</a></td></tr>`;
   const rule = data.template === "classic" || data.template === "executive" || data.template === "finance" || data.template === "counsel" || data.template === "clinic" || consulting || luxe ? `border-top:2px solid ${theme};` : "";
   const border = data.template === "minimal" || data.template === "modern" || data.template === "tech" || data.template === "developer" || data.template === "portfolio" ? `border-left:3px solid ${theme};` : "";
   const bg = luxe ? "#fff8eb" : studio ? "#f8f7ff" : brandDesk ? "#f1f5f9" : data.template === "wellness" || data.template === "clinic" ? "#f7fffb" : data.template === "education" ? "#fffbeb" : data.template === "property" ? "#f0f9ff" : "#ffffff";
-  const label = consulting ? `<div style="font-size:9px;letter-spacing:1.5px;color:#475569;margin-bottom:5px">${t("CONTATO PROFISSIONAL")}</div>` : data.template === "developer" ? `<div style="font-size:10px;color:${theme};font-family:Arial,sans-serif;margin-bottom:4px">&lt;/&gt;</div>` : data.template === "education" ? `<div style="font-size:9px;letter-spacing:1px;color:${theme};margin-bottom:5px">${t("EDUCAÇÃO")}</div>` : "";
+  const label = consulting ? `<div style="font-size:9px;letter-spacing:1.5px;color:#475569;margin-bottom:5px">${escape(t("CONTATO PROFISSIONAL"))}</div>` : data.template === "developer" ? `<div style="font-size:10px;color:${theme};font-family:Arial,sans-serif;margin-bottom:4px">&lt;/&gt;</div>` : data.template === "education" ? `<div style="font-size:9px;letter-spacing:1px;color:${theme};margin-bottom:5px">${escape(t("EDUCAÇÃO"))}</div>` : "";
 
   const whatsappSource = data.whatsapp || (data.whatsappSameAsPhone && data.phone ? data.phone : "");
   const whatsapp = whatsappSource ? whatsappLink(whatsappSource, data.whatsappMessage) : null;
@@ -106,6 +120,17 @@ export function renderSignature(data: SignatureData, pro: boolean, locale: Local
 }
 
 export function renderSignatureText(data: SignatureData, pro: boolean, locale: Locale = "pt-BR") {
+  const blocosRaw = data.templateBlocos || (data.blocos ? (() => { try { return JSON.parse(data.blocos); } catch { return null; } })() : null);
+  if (Array.isArray(blocosRaw) && blocosRaw.length) {
+    const modelo = getModeloBlocos(data.templateBlocos ?? "");
+    const d: Record<string, unknown> = data as unknown as Record<string, unknown>;
+    return renderBlocosHtml(
+      { cor: modelo?.cor ?? data.color, serif: !!modelo?.serif, compativel: modelo?.compativel ?? data.modoCompativel },
+      blocosRaw as Bloco[],
+      d,
+      locale,
+    ).text;
+  }
   data = { ...emptySignature, ...data };
   const t = translator(locale);
   const lines: string[] = [];
