@@ -5,6 +5,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
+import { LinkWithOnClick } from "@/components/shared/LinkWithOnClick";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Lock, Clipboard, Save, FileText } from "lucide-react";
@@ -101,7 +102,7 @@ export function ProfessionSignatureBuilder({ initial = emptySignature, pro = fal
 
   function ProLock({ note, source = "pro_lock" }: { note: string; source?: string }) {
     useEffect(() => { posthog.capture("resource_pro_locked_seen", { source, tab, profession_id: professionId || undefined, ...utm }); }, [source]); // eslint-disable-line
-    return <div className="flex items-start gap-2 rounded-xl border border-violet-200 bg-violet-50 p-3 text-sm text-violet-900"><Lock size={16} className="mt-0.5 shrink-0" /><span>{t(note)}{" "}<Link href="/precos" className="font-semibold underline" onClick={() => posthog.capture("upgrade_started", { source, tab, ...utm })}>{t("Conheça o Pro")}</Link></span></div>;
+    return <div className="flex items-start gap-2 rounded-xl border border-violet-200 bg-violet-50 p-3 text-sm text-violet-900"><Lock size={16} className="mt-0.5 shrink-0" /><span>{t(note)}{" "}<LinkWithOnClick href="/precos" className="font-semibold underline" onClick={() => posthog.capture("upgrade_started", { source, tab, ...utm })}>{t("Conheça o Pro")}</LinkWithOnClick></span></div>;
   }
 
   async function saveToAccount(value: SignatureData) {
@@ -257,7 +258,7 @@ export function ProfessionSignatureBuilder({ initial = emptySignature, pro = fal
       </div>}
       <div className="flex flex-wrap gap-2"><Button type="button" variant={tab===tabs[0]?"outline":"ghost"} onClick={()=>{const i=tabs.indexOf(tab); if(i>0) setTab(tabs[i-1]);}} disabled={tab===tabs[0]}>{t("Voltar")}</Button><Button type="button" variant="outline" onClick={()=>{const i=tabs.indexOf(tab); if(i<tabs.length-1) setTab(tabs[i+1]);}} disabled={tab===tabs[tabs.length-1]}>{t("Avançar")}</Button></div>
       <TemplateSelector value={data.template} pro={pro} owned={owned} onChange={template=>{ setViewTemplate(null); form.setValue("template", template,{shouldDirty:true}); }} onLocked={template=>{ setViewTemplate(template); posthog.capture("resource_pro_locked_seen", { source: "template_preview", tab, template, profession_id: professionId || undefined, ...utm }); }} />
-      {previewingLocked && <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-950"><span><strong>{templates.find(x=>x.id===viewTemplate)?.label}</strong> é um modelo Pro. Você pode visualizar, mas não salvar/exportar neste plano.</span><span className="flex gap-2"><Button type="button" variant="outline" onClick={()=>setViewTemplate(null)}>{t("Voltar ao meu modelo")}</Button><Button asChild type="button"><Link href="/precos" onClick={()=>posthog.capture("upgrade_started",{source:"template_preview",template:viewTemplate,...utm})}>{t("Conheça o Pro")}</Link></Button></span></div>}
+      {previewingLocked && <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-950"><span><strong>{templates.find(x=>x.id===viewTemplate)?.label}</strong> é um modelo Pro. Você pode visualizar, mas não salvar/exportar neste plano.</span><span className="flex gap-2"><Button type="button" variant="outline" onClick={()=>setViewTemplate(null)}>{t("Voltar ao meu modelo")}</Button><Button asChild type="button"><LinkWithOnClick href="/precos" onClick={()=>posthog.capture("upgrade_started",{source:"template_preview",template:viewTemplate,...utm})}>{t("Conheça o Pro")}</LinkWithOnClick></Button></span></div>}
       {pack && !pro && <p className="text-xs text-slate-600">{t("Modelos recomendados do pacote disponíveis no Pro:")} {pack.recommendedModels.join(", ")}</p>}
       {professionId && <div className="mt-4 rounded-xl border border-slate-200 bg-slate-50 p-3 space-y-2">
         <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-600">{t("Pontos de atenção")}</h3>

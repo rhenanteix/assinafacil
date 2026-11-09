@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { track } from "@/lib/posthog-client";
 import type { AnalyticsProperties } from "@/lib/analytics/events";
+import { LinkWithOnClick } from "@/components/shared/LinkWithOnClick";
 
 type TrackedLinkProps = {
   /** Nome do evento a disparar no clique. */
@@ -20,8 +21,15 @@ type TrackedLinkProps = {
  * Útil para navegação do header, CTAs e cards.
  */
 export function TrackedLink({ event, properties, children, linkProps }: TrackedLinkProps) {
-  function handleClick() {
-    track(event, properties);
-  }
-  return <Link {...linkProps} onClick={handleClick}>{children}</Link>;
+  return (
+    <LinkWithOnClick
+      {...linkProps}
+      onClick={(e) => {
+        track(event, properties);
+        linkProps?.onClick?.(e as unknown as React.MouseEvent<HTMLAnchorElement>);
+      }}
+    >
+      {children}
+    </LinkWithOnClick>
+  );
 }
