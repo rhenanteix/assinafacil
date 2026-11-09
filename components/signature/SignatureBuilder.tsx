@@ -13,9 +13,10 @@ import { Button } from "@/components/ui/button";
 import { FormFields } from "./FormFields";
 import { SignaturePreview } from "./SignaturePreview";
 import { TemplateSelector } from "./TemplateSelector";
-import { emptySignature, signatureSchema, canUseTemplate, type SignatureData } from "@/types/signature";
+import { emptySignature, signatureSchema, canUseTemplate, type SignatureData, templates } from "@/types/signature";
 import { jsonRequest, useSignatureActions } from "@/hooks/use-signature-actions";
 import { clearDraft, storeAuthDraft, useSignatureDraft } from "@/hooks/use-signature-draft";
+import { track } from "@/lib/posthog-client";
 
 export function SignatureBuilder({ initial = emptySignature, pro = false, signedIn = false, needsVerification = false, owned = [], id, restoreDraft = true }: {
   initial?: SignatureData; pro?: boolean; signedIn?: boolean; needsVerification?: boolean; owned?: string[]; id?: string; restoreDraft?: boolean;
@@ -36,6 +37,9 @@ export function SignatureBuilder({ initial = emptySignature, pro = false, signed
   const lockedTemplate = !canUseTemplate(data.template, pro, owned);
   const premium = !lockedTemplate && (pro || owned.includes(data.template));
   const { busy, run } = useSignatureActions();
+  useEffect(() => {
+    track("editor_opened", { signed_in: !!signedIn, user_tier: pro ? "pro" : "free", editing_existing: !!id });
+  }, [signedIn, pro, id]);
   function signIn(value: SignatureData) {
     if (!storeAuthDraft(value)) {
       toast.error(t("Seu navegador bloqueou o armazenamento do rascunho. Habilite-o antes de entrar para manter os dados."));
@@ -58,6 +62,7 @@ export function SignatureBuilder({ initial = emptySignature, pro = false, signed
       body.set("file", file);
       const { url } = await jsonRequest<{ url: string }>("/api/upload", { method: "POST", body });
       form.setValue(kind, url, { shouldValidate: true, shouldDirty: true });
+      track("image_uploaded", { kind });
       toast.success(t("Imagem adicionada."));
     });
   }
@@ -84,12 +89,16 @@ export function SignatureBuilder({ initial = emptySignature, pro = false, signed
             <label className="block text-sm font-medium">{kind === "photo" ? t("Foto de perfil") : "Logo"}
               <input className="mt-2 block w-full text-xs" type="file" accept="image/jpeg,image/png,image/webp" disabled={!!busy} onChange={event => { const file = event.target.files?.[0]; event.target.value = ""; void upload(kind, file); }} />
             </label>
-            {data[kind] && <Button type="button" variant="ghost" disabled={!!busy} onClick={() => form.setValue(kind, "", { shouldDirty: true })}>{t("Remover imagem")}</Button>}
+            {data[kind] && <Button type="button" variant="ghost" disabled={!!busy} onClick={() => { track("image_removed", { kind }); form.setValue(kind, "", { shouldDirty: true }); }}>{t("Remover imagem")}</Button>}
           </div>)}
         </div>
-        <label className="flex items-center gap-3 text-sm font-semibold"><input type="color" className="h-10 w-12 cursor-pointer" {...form.register("color")} /> {" "}{t("Cor principal")}{" "}<span className="font-mono text-slate-600">{data.color}</span></label>
+        <label className="flex items-center gap-3 text-sm font-semibold"><input type="color" value={data.color} onChange={(e) => { form.setValue("color", e.target.value, { shouldDirty: true }); track("primary_color_changed", { color: e.target.value }); }} /> {" "}{t("Cor principal")}{" "}<span className="font-mono text-slate-600">{data.color}</span></label>
       </>}
-      <TemplateSelector value={data.template} pro={pro} owned={owned} onChange={template => form.setValue("template", template)} />
+        <TemplateSelector value={data.template} pro={pro} owned={owned} onChange={(template) => {
+          const templateDef = templates.find((t) => t.id === template);
+          track("template_changed", { from_template: data.template, to_template: template, premium_template: Boolean(templateDef?.pro) });
+          form.setValue("template", template);
+        }} />
     </section>
     <section className="panel space-y-5 lg:sticky lg:top-5" aria-label={t("Prévia e exportação")}>
       <div><span className="eyebrow">{t("02 / Prévia ao vivo")}</span><h2 className="mt-2 text-2xl font-bold">{t("Veja como ficou")}</h2></div>
@@ -105,9 +114,13 @@ export function SignatureBuilder({ initial = emptySignature, pro = false, signed
           if (typeof ClipboardItem !== "undefined" && navigator.clipboard?.write) {
             const item = new ClipboardItem({ "text/html": html.then(content => new Blob([content], { type: "text/html" })), "text/plain": html.then(content => new Blob([content], { type: "text/plain" })) });
             try { await navigator.clipboard.write([item]); }
-            catch { await navigator.clipboard.writeText(await html); toast.success(t("Código HTML copiado.")); return; }
+            catch { await navigator.clipboard.writeText(await html); }
+            toast.success(t("Código HTML copiado."));
+            track("html_copied", { premium });
+            return;
           } else { await navigator.clipboard.writeText(await html); }
           toast.success(t("HTML copiado."));
+          track("html_copied", { premium });
         })}><Clipboard size={16} />{busy === "copy" ? t("Copiando…") : t("Copiar HTML")}</Button>
         <Button type="button" variant="outline" disabled={!!busy || lockedTemplate} onClick={submit("png", async value => {
           if (!premium) {
@@ -120,6 +133,7 @@ export function SignatureBuilder({ initial = emptySignature, pro = false, signed
             }
             savedId.current = response.headers.get("X-Signature-Id") ?? savedId.current;
             download(await response.blob());
+            track("png_downloaded", { premium, free_export: true });
             clearDraft();
             router.replace(`/dashboard?editar=${savedId.current}`);
             router.refresh();
@@ -135,6 +149,7 @@ export function SignatureBuilder({ initial = emptySignature, pro = false, signed
           const blob = await new Promise<Blob | null>(resolve => canvas.toBlob(resolve, "image/png"));
           if (!blob) throw new Error(t("Não foi possível gerar o PNG."));
           download(blob);
+          track("png_downloaded", { premium, free_export: false });
         })}><Download size={16} />{busy === "png" ? t("Exportando…") : t("Baixar PNG")}</Button>
         <Button type="button" variant="ghost" disabled={!!busy || lockedTemplate} onClick={submit("save", async value => {
           const current = savedId.current;
@@ -142,6 +157,7 @@ export function SignatureBuilder({ initial = emptySignature, pro = false, signed
             method: current ? "PATCH" : "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(value),
           });
           savedId.current = result.id;
+          track("signature_saved", { created: !current, template: value.template, premium });
           clearDraft();
           router.replace(`/dashboard?editar=${result.id}`);
           router.refresh();

@@ -8,6 +8,7 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { jsonRequest, useSignatureActions } from "@/hooks/use-signature-actions";
+import { track } from "@/lib/posthog-client";
 
 export function AuthForm({ register = false, google, destination }: { register?: boolean; google: boolean; destination: "precos" | "dashboard" | "gerador" }) {
   const t = useTranslation();
@@ -19,20 +20,30 @@ export function AuthForm({ register = false, google, destination }: { register?:
     <form className="space-y-4" onSubmit={event => {
       event.preventDefault();
       const values = Object.fromEntries(new FormData(event.currentTarget));
+      const method = "credentials";
+      if (register) track("register_started", { method, destination });
+      else track("login_started", { method, destination });
       void run("auth", async () => {
+        let verificationSent = false;
         if (register) {
-          const { verificationSent } = await jsonRequest<{ verificationSent: boolean }>("/api/register", {
+          const { verificationSent: sent } = await jsonRequest<{ verificationSent: boolean }>("/api/register", {
             method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...values, destination }),
           });
+          verificationSent = sent;
+          track("register_completed", { method, email_verified: false, destination, verification_sent: verificationSent });
           if (verificationSent) toast.success(t("Conta criada com sucesso."));
           if (!verificationSent) toast.info(t("Conta criada. Use a opção de enviar um novo link para confirmar o e-mail."));
         }
         const result = await signIn("credentials", { ...values, redirect: false });
         if (!result?.ok) {
+          track("login_failed", { method, reason: "invalid_credentials" });
           if (register) { router.replace("/login" + suffix); return; }
           throw new Error(t("Confira seu e-mail e sua senha."));
         }
-        if (!register) toast.success(t("Você entrou com sucesso."));
+        if (!register) {
+          track("login_completed", { method, email_verified: false, destination });
+          toast.success(t("Você entrou com sucesso."));
+        }
         router.replace("/verificar-email" + suffix);
         router.refresh();
       });
@@ -42,9 +53,10 @@ export function AuthForm({ register = false, google, destination }: { register?:
       <label className="grid gap-2 text-sm font-medium">{t("Senha")}<Input name="password" type="password" autoComplete={register ? "new-password" : "current-password"} minLength={8} maxLength={72} required /></label>
       <Button type="submit" disabled={!!busy} className="w-full">{busy === "auth" ? t("Aguarde…") : register ? t("Criar conta") : t("Entrar")}</Button>
     </form>
-    {!register && <Link href="/recuperar-senha" className="mt-4 block text-sm text-brand underline">Esqueci minha senha</Link>}
-    {register && <p className="mt-4 text-xs text-slate-500">Ao criar sua conta, você concorda com os <Link href="/termos" className="underline">Termos de Uso</Link> e conhece a <Link href="/privacidade" className="underline">Política de Privacidade</Link>.</p>}
-    {google && <Button variant="outline" className="mt-3 w-full" disabled={!!busy} onClick={() => void run("google", async () => { await signIn("google", { callbackUrl: "/verificar-email" + suffix }); })}>{t("Continuar com Google")}</Button>}
+    {google && <Button variant="outline" className="mt-3 w-full" disabled={!!busy} onClick={() => {
+      track("google_login_started", { method: "google", destination });
+      void run("google", async () => { await signIn("google", { callbackUrl: "/verificar-email" + suffix }); });
+    }}>{t("Continuar com Google")}</Button>}
     <p className="mt-5 text-sm"><Link className="text-brand underline" href={(register ? "/login" : "/cadastro") + suffix}>{register ? t("Já tenho conta") : t("Criar conta gratuita")}</Link></p>
   </div></div>;
 }
