@@ -5,6 +5,7 @@ export function commercialInfo() {
   return {
     supportEmail: validEmail(process.env.SUPPORT_EMAIL) ?? validEmail(process.env.BUSINESS_CONTACT_EMAIL),
     businessEmail: validEmail(process.env.BUSINESS_CONTACT_EMAIL),
+    supportPhone: process.env.SUPPORT_PHONE ?? undefined,
     supportResponse: process.env.SUPPORT_RESPONSE_TIME,
     invoice: process.env.INVOICE_POLICY,
     legalName: process.env.LEGAL_ENTITY_NAME,

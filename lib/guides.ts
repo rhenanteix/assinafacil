@@ -29,5 +29,27 @@ export const guides = {
       ["Celular e modo escuro", "Confira as configurações de assinatura de cada conta no aplicativo. Não presuma que a assinatura do desktop será sincronizada. Faça envios reais: Outlook clássico, web e celular podem renderizar o mesmo HTML de formas diferentes, especialmente no modo escuro."],
     ], sources: [{ label: "Microsoft: Outlook web em português", url: "https://support.microsoft.com/pt-br/outlook/officeweb/create-a-signature-and-automatic-reply" }, { label: "Microsoft: assinatura no Outlook desktop", url: "https://support.microsoft.com/pt-br/topic/criar-uma-assinatura-de-email-no-outlook-0f6ec33a-94dc-c87b-ad05-3bd04e89f51c" }],
   },
+  "assinatura-no-roundcube": {
+    title: "Como colocar assinatura no Roundcube",
+    description: "Passo a passo para instalar sua assinatura no Roundcube, webmail comum em hospedagens brasileiras.",
+    verificado: false,
+    sections: [
+      ["1. Crie e copie sua assinatura", "Preencha os dados no gerador e clique em Copiar HTML. Abra o arquivo HTML no navegador e copie o conteúdo formatado."],
+      ["2. Abra as configurações do Roundcube", "No Roundcube, abra o menu de configurações (engrenagem) e escolha Identidades. Selecione sua conta de e-mail."],
+      ["3. Cole a assinatura", "No campo Assinatura, cole o conteúdo formatado. Se preferir PNG, use o botão de imagem para inserir o arquivo baixado."],
+      ["4. Salve e teste", "Salve as alterações e envie uma mensagem de teste para conferir a exibição, incluindo modo escuro e imagens bloqueadas."],
+    ], sources: [],
+  },
+  "assinatura-no-zimbra": {
+    title: "Como colocar assinatura no Zimbra",
+    description: "Passo a passo para instalar sua assinatura no Zimbra, webmail usado em hospedagens e provedores brasileiros.",
+    verificado: false,
+    sections: [
+      ["1. Crie e copie sua assinatura", "Preencha os dados no gerador e clique em Copiar HTML. Abra o arquivo HTML no navegador e copie o conteúdo formatado."],
+      ["2. Abra as preferências do Zimbra", "No Zimbra, vá em Preferências → E-mail → Assinatura."],
+      ["3. Crie a assinatura", "Clique em Nova assinatura, dê um nome e cole o conteúdo formatado no editor. Marque como assinatura padrão se desejar."],
+      ["4. Salve e teste", "Salve e envie uma mensagem de teste para conferir a exibição, incluindo modo escuro e imagens bloqueadas."],
+    ], sources: [],
+  },
 } as const;
 export type GuideSlug = keyof typeof guides;
