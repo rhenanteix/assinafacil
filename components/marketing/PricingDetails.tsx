@@ -388,10 +388,10 @@ export function BusinessContact({
         onClick={openModal}
         className={
           "inline-flex items-center gap-2 rounded-xl " +
-          "border-violet-200 bg-white px-5 py-3 " +
+          "border-violet-200 bg-purple px-5 py-3 " +
           "font-semibold text-violet-700 shadow-sm " +
           "transition hover:border-violet-400 " +
-          "hover:bg-violet-50"
+          "hover:bg-purple"
         }
       >
         <Users className="h-4 w-4" aria-hidden="true" />
